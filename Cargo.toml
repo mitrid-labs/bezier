@@ -1,0 +1,16 @@
+[package]
+name = "bezier"
+version = "0.1.0"
+authors = ["Christian Nyumbayire <chritchens@gmail.com>"]
+
+[dependencies]
+serde = "^1"
+serde_derive = "^1"
+serde_json = "^1"
+serde_cbor = "^0.9"
+hex = "^0.3"
+sodiumoxide = "^0.1"
+mitrid_core = "0.7"
+
+[dev-dependencies]
+tempfile = "^3"
