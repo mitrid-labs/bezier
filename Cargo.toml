@@ -3,6 +3,12 @@ name = "bezier"
 version = "0.1.0"
 authors = ["Christian Nyumbayire <chritchens@gmail.com>"]
 
+[lib]
+name = "bezier_lib"
+
+[[bin]]
+name = "bezier"
+
 [dependencies]
 serde = "^1"
 serde_derive = "^1"
