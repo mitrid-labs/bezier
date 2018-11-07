@@ -25,7 +25,7 @@ impl HashCash {
         }
     }
 
-    pub fn prove(&self, msg: &[u8]) -> Result<Proof> {
+    fn _prove(&self, msg: &[u8]) -> Result<Proof> {
         init().unwrap();
 
         let mut hasher = Hasher{};
@@ -70,7 +70,7 @@ impl HashCash {
 
     }
 
-    pub fn verify(&self, msg: &[u8], proof: &Proof) -> Result<bool> {
+    fn _verify(&self, msg: &[u8], proof: &Proof) -> Result<bool> {
         init().unwrap();
 
         proof.check()?;
@@ -107,12 +107,12 @@ impl HashCash {
         }
     }
 
-    pub fn check(&self, msg: &[u8], proof: &Proof) -> Result<()> {
+    fn _check(&self, msg: &[u8], proof: &Proof) -> Result<()> {
         init().unwrap();
 
         proof.check()?;
 
-        if !self.verify(msg, proof)? {
+        if !self._verify(msg, proof)? {
             return Err(format!("invalid proof"));
         }
 
@@ -122,15 +122,15 @@ impl HashCash {
 
 impl Prove<Proof> for HashCash {
     fn prove(&mut self, msg: &[u8]) -> Result<Proof> {
-        (self as &HashCash).prove(msg)
+        self._prove(msg)
     }
 
     fn verify(&mut self, msg: &[u8], proof: &Proof) -> Result<bool> {
-        (self as &HashCash).verify(msg, proof)
+        self._verify(msg, proof)
     }
 
     fn check(&mut self, msg: &[u8], proof: &Proof) -> Result<()> {
-       (self as &HashCash).check(msg, proof)
+       self._check(msg, proof)
     }
 }
 

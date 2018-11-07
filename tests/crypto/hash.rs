@@ -40,26 +40,26 @@ fn test_hash_sha512() {
         msg.push(0);
     }
 
-    let mut hash = SHA512{};
+    let mut hasher = SHA512{};
 
-    let res = hash.digest(&msg);
+    let res = hasher.digest(&msg);
     assert!(res.is_ok());
 
     let digest = res.unwrap();
 
-    let res = hash.verify(&msg, &digest);
+    let res = hasher.verify(&msg, &digest);
     assert!(res.is_ok());
     assert!(res.unwrap());
 
-    let res = hash.check(&msg, &digest);
+    let res = hasher.check(&msg, &digest);
     assert!(res.is_ok());
 
     msg.push(0);
 
-    let res = hash.verify(&msg, &digest);
+    let res = hasher.verify(&msg, &digest);
     assert!(res.is_ok());
     assert!(!res.unwrap());
 
-    let res = hash.check(&msg, &digest);
+    let res = hasher.check(&msg, &digest);
     assert!(res.is_err());
 }

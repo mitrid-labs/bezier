@@ -136,31 +136,31 @@ fn test_sign_ed25519() {
         msg.push(0);
     }
 
-    let mut sign = Ed25519{};
+    let mut signer = Ed25519{};
 
-    let res = sign.generate_keys(None);
+    let res = signer.generate_keys(None);
     assert!(res.is_ok());
 
     let (pk, sk) = res.unwrap();
 
-    let res = sign.sign(&msg, &sk);
+    let res = signer.sign(&msg, &sk);
     assert!(res.is_ok());
 
     let sig = res.unwrap();
 
-    let res = sign.verify(&msg, &pk, &sig);
+    let res = signer.verify(&msg, &pk, &sig);
     assert!(res.is_ok());
     assert!(res.unwrap());
 
-    let res = sign.check(&msg, &pk, &sig);
+    let res = signer.check(&msg, &pk, &sig);
     assert!(res.is_ok());
 
     msg.push(0);
 
-    let res = sign.verify(&msg, &pk, &sig);
+    let res = signer.verify(&msg, &pk, &sig);
     assert!(res.is_ok());
     assert!(!res.unwrap());
 
-    let res = sign.check(&msg, &pk, &sig);
+    let res = signer.check(&msg, &pk, &sig);
     assert!(res.is_err());
 }
