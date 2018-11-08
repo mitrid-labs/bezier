@@ -77,7 +77,17 @@ impl Checkable for StoreEvalMutParams {
             &StoreEvalMutParams::DropRange { ref prefix, ref from, ref to } => {
                 prefix.check()?;
                 from.check()?;
-                to.check()
+                to.check()?;
+
+                if let Some(ref from) = from {
+                    if let Some(ref to) = to {
+                        if from >= to {
+                            return Err(String::from("invalid range"));
+                        } 
+                    }
+                }
+
+                Ok(())
             },
             &StoreEvalMutParams::DropPrefix { ref prefix } => prefix.check(),
         }

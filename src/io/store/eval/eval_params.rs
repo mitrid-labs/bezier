@@ -33,7 +33,7 @@ impl StoreEvalParams {
         StoreEvalParams::None
     }
 
-    pub fn path() -> StoreEvalParams {
+    pub fn new_path() -> StoreEvalParams {
         StoreEvalParams::Path
     }
 
@@ -154,14 +154,34 @@ impl Checkable for StoreEvalParams {
             &StoreEvalParams::SizeRange { ref prefix, ref from, ref to } => {
                 prefix.check()?;
                 from.check()?;
-                to.check()
+                to.check()?;
+
+                if let Some(ref from) = from {
+                    if let Some(ref to) = to {
+                        if from >= to {
+                            return Err(String::from("invalid range"));
+                        } 
+                    }
+                }
+
+                Ok(())
             },
             &StoreEvalParams::SizePrefix { ref prefix } => prefix.check(),
             &StoreEvalParams::Dump => Ok(()),
             &StoreEvalParams::DumpRange { ref prefix, ref from, ref to } => {
                 prefix.check()?;
                 from.check()?;
-                to.check()
+                to.check()?;
+
+                if let Some(ref from) = from {
+                    if let Some(ref to) = to {
+                        if from >= to {
+                            return Err(String::from("invalid range"));
+                        } 
+                    }
+                }
+
+                Ok(())
             },
             &StoreEvalParams::DumpPrefix { ref prefix } => prefix.check(),
         }
