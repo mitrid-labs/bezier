@@ -17,7 +17,7 @@ serde_cbor = "^0.9"
 hex = "^0.3"
 sodiumoxide = "^0.1"
 rocksdb = "^0.10"
-mitrid_core = "0.7.2"
+mitrid_core = "^0.8"
 
 [dev-dependencies]
 tempfile = "^3"

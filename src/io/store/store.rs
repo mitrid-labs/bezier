@@ -118,7 +118,8 @@ impl Store {
     fn _list(&self,
              from: Option<Vec<u8>>,
              to: Option<Vec<u8>>,
-             count: Option<u64>)
+             count: Option<u64>,
+             skip: u64)
         -> Result<Vec<Vec<u8>>>
     {
 
@@ -143,19 +144,29 @@ impl Store {
         };
 
         let mut list = Vec::new();
-        let mut ct = 0;
+        let mut cnt: i64 = if let Some(count) = count {
+            count.to_owned() as i64
+        } else {
+            -1
+        };
+        let mut skip = skip;
 
         for (key, value) in self.internal.iterator(mode) {
             if let Some(ref to) = to {
                 if &*key < to {
-                    if let Some(count) = count {
-                        if ct >= count {
-                            break;
-                        }
+                    if cnt == 0 {
+                        break;
+                    } else {
+                        cnt -= 1;
+                    }
+
+                    if skip > 0 {
+                        skip -= 1;
+                        continue;
                     }
 
                     list.push((&*value).into());
-                    ct += 1;
+                    cnt += 1;
                 } else {
                     break;
                 }
@@ -167,19 +178,32 @@ impl Store {
 
     fn _list_prefix(&self,
                     prefix: &[u8],
-                    count: Option<u64>)
+                    count: Option<u64>,
+                    skip: u64)
         -> Result<Vec<Vec<u8>>>
     {
         let mut list = Vec::new();
-        let mut ct = 0;
+        let mut cnt: i64 = if let Some(count) = count {
+            count.to_owned() as i64
+        } else {
+            -1
+        };
+        let mut skip = skip;
 
         for (_, value) in self.internal.prefix_iterator(prefix) {
-            if let Some(count) = count {
-                if ct >= count { break; }
-
-                list.push((&*value).to_vec());
-                ct += 1;
+            if cnt == 0 {
+                break;
+            } else {
+                cnt -= 1;
             }
+
+            if skip > 0 {
+                skip -= 1;
+                continue;
+            }
+
+            list.push((&*value).to_vec());
+            cnt += 1;
         }
 
         Ok(list)
@@ -234,24 +258,42 @@ impl Store {
             .map_err(|e| format!("{:?}", e))
     }
 
-    pub fn session_prefix() -> u64 {
-        u64::max_value()
+    pub fn dump(&mut self) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        self.dump_prefix(b"")
     }
 
-    pub fn session_id(&self) -> Result<u64> {
-        let count = self.count_sessions()?;
-        
-        let id = count + 1;
-    
-        Ok(id)
+    pub fn dump_range(&mut self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        let mut dump = Vec::new();
+
+        if let Some(ref from) = from {
+            if let Some(ref to) = to {
+                if from >= to {
+                    return Err(String::from("invalid range"));
+                } 
+            }
+        }
+
+        let mode = if let Some(ref from) = from {
+            IteratorMode::From(&from, Direction::Forward)
+        } else {
+            IteratorMode::Start
+        };
+
+        for (key, value) in self.internal.iterator(mode) {
+            dump.push(((&*key).to_vec(), (&*value).to_vec()));
+        }
+
+        Ok(dump)
     }
 
-    fn session_key_from_id(id: u64) -> Vec<u8> {
-        let mut key = Vec::new();
-        let _key: [u8; 8] = unsafe { mem::transmute(id) };
-        key.extend_from_slice(&_key[..]);
+    pub fn dump_prefix(&mut self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        let mut dump = Vec::new();
 
-        key
+        for (key, value) in self.internal.prefix_iterator(&prefix) {
+            dump.push(((&*key).to_vec(), (&*value).to_vec()));
+        }
+
+        Ok(dump)
     }
 
     pub fn drop(&mut self) -> Result<()> {
@@ -288,6 +330,26 @@ impl Store {
         Ok(())
     }
 
+    pub fn sessions_prefix() -> u64 {
+        u64::max_value()
+    }
+
+    pub fn session_id(&self) -> Result<u64> {
+        let count = self.count_sessions()?;
+        
+        let id = count + 1;
+    
+        Ok(id)
+    }
+
+    fn session_key_from_id(id: u64) -> Vec<u8> {
+        let mut key = Vec::new();
+        let _key: [u8; 8] = unsafe { mem::transmute(id) };
+        key.extend_from_slice(&_key[..]);
+
+        key
+    }
+
     pub fn session_key(session: &Session) -> Result<Vec<u8>> {
         session.check()?;
 
@@ -298,7 +360,7 @@ impl Store {
 
     pub fn count_sessions(&self) -> Result<u64> {
         let mut prefix = Vec::new();
-        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::session_prefix()) };
+        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::sessions_prefix()) };
         prefix.extend_from_slice(&_prefix[..]);
 
         let mut count = 0;
@@ -312,7 +374,7 @@ impl Store {
 
     pub fn list_sessions(&self) -> Result<Vec<Session>> {
         let mut prefix = Vec::new();
-        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::session_prefix()) };
+        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::sessions_prefix()) };
         prefix.extend_from_slice(&_prefix[..]);
 
         let mut list = Vec::new();
@@ -350,7 +412,7 @@ impl Store {
 
     pub fn cleanup_sessions(&mut self) -> Result<()> {
         let mut prefix = Vec::new();
-        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::session_prefix()) };
+        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::sessions_prefix()) };
         prefix.extend_from_slice(&_prefix[..]);
 
         for (_, value) in self.internal.prefix_iterator(&prefix) {
@@ -365,7 +427,7 @@ impl Store {
 
     pub fn drop_sessions(&mut self) -> Result<()> {
         let mut prefix = Vec::new();
-        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::session_prefix()) };
+        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::sessions_prefix()) };
         prefix.extend_from_slice(&_prefix[..]);
 
         for (_, value) in self.internal.prefix_iterator(&prefix) {
@@ -456,7 +518,8 @@ impl StoreBase<()> for Store {
             session: &Session,
             from: Option<Vec<u8>>,
             to: Option<Vec<u8>>,
-            count: Option<u64>)
+            count: Option<u64>,
+            skip: u64)
         -> Result<Vec<Vec<u8>>>
     {
         session.check()?;
@@ -485,6 +548,10 @@ impl StoreBase<()> for Store {
             if count == 0 {
                 return Err(String::from("invalid count"));
             }
+
+            if skip >= count {
+                return Err(String::from("invalid skip"));
+            }
         }
 
         let found_session = self.get_session(session.id)?;
@@ -492,13 +559,14 @@ impl StoreBase<()> for Store {
             return Err(String::from("session not found"));
         }
 
-        self._list(from, to, count)
+        self._list(from, to, count, skip)
     }
     
     fn list_prefix(&mut self,
                    session: &Session,
                    prefix: &[u8],
-                   count: Option<u64>)
+                   count: Option<u64>,
+                   skip: u64)
         -> Result<Vec<Vec<u8>>>
     {
         session.check()?;
@@ -517,6 +585,10 @@ impl StoreBase<()> for Store {
             if count == 0 {
                 return Err(String::from("invalid count"));
             }
+
+            if skip >= count {
+                return Err(String::from("invalid skip"));
+            }
         }
 
         let found_session = self.get_session(session.id)?;
@@ -524,7 +596,7 @@ impl StoreBase<()> for Store {
             return Err(String::from("session not found"));
         }
 
-        self._list_prefix(prefix, count)
+        self._list_prefix(prefix, count, skip)
     }
     
     fn lookup(&mut self,
