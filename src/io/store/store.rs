@@ -258,11 +258,11 @@ impl Store {
             .map_err(|e| format!("{:?}", e))
     }
 
-    pub fn dump(&mut self) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+    pub fn dump(&self) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
         self.dump_prefix(b"")
     }
 
-    pub fn dump_range(&mut self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+    pub fn dump_range(&self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
         let mut dump = Vec::new();
 
         if let Some(ref from) = from {
@@ -286,7 +286,7 @@ impl Store {
         Ok(dump)
     }
 
-    pub fn dump_prefix(&mut self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+    pub fn dump_prefix(&self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
         let mut dump = Vec::new();
 
         for (key, value) in self.internal.prefix_iterator(&prefix) {
@@ -294,6 +294,46 @@ impl Store {
         }
 
         Ok(dump)
+    }
+
+    pub fn size(&self) -> Result<u64> {
+        self.size_prefix(b"")
+    }
+
+    pub fn size_range(&self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<u64> {
+        if let Some(ref from) = from {
+            if let Some(ref to) = to {
+                if from >= to {
+                    return Err(String::from("invalid range"));
+                } 
+            }
+        }
+
+        let mode = if let Some(ref from) = from {
+            IteratorMode::From(&from, Direction::Forward)
+        } else {
+            IteratorMode::Start
+        };
+
+        let mut size = 0;
+
+        for (key, value) in self.internal.iterator(mode) {
+            size += (&*key).len() as u64;
+            size += (&*value).len() as u64;
+        }
+
+        Ok(size)
+    }
+
+    pub fn size_prefix(&self, prefix: &[u8]) -> Result<u64> {
+        let mut size = 0;
+
+        for (key, value) in self.internal.prefix_iterator(&prefix) {
+            size += (&*key).len() as u64;
+            size += (&*value).len() as u64;
+        }
+
+        Ok(size)
     }
 
     pub fn drop(&mut self) -> Result<()> {
@@ -330,8 +370,13 @@ impl Store {
         Ok(())
     }
 
-    pub fn sessions_prefix() -> u64 {
-        u64::max_value()
+    pub fn sessions_prefix() -> Vec<u8> {
+        let mut prefix = Vec::new();
+
+        let _prefix: [u8; 8] = unsafe { mem::transmute(u64::max_value()) };
+        prefix.extend_from_slice(&_prefix);
+    
+        prefix
     }
 
     pub fn session_id(&self) -> Result<u64> {
@@ -359,9 +404,7 @@ impl Store {
     }
 
     pub fn count_sessions(&self) -> Result<u64> {
-        let mut prefix = Vec::new();
-        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::sessions_prefix()) };
-        prefix.extend_from_slice(&_prefix[..]);
+        let prefix =  Self::sessions_prefix();
 
         let mut count = 0;
 
@@ -373,9 +416,7 @@ impl Store {
     }
 
     pub fn list_sessions(&self) -> Result<Vec<Session>> {
-        let mut prefix = Vec::new();
-        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::sessions_prefix()) };
-        prefix.extend_from_slice(&_prefix[..]);
+        let prefix =  Self::sessions_prefix();
 
         let mut list = Vec::new();
 
@@ -411,9 +452,7 @@ impl Store {
     }
 
     pub fn cleanup_sessions(&mut self) -> Result<()> {
-        let mut prefix = Vec::new();
-        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::sessions_prefix()) };
-        prefix.extend_from_slice(&_prefix[..]);
+        let prefix =  Self::sessions_prefix();
 
         for (_, value) in self.internal.prefix_iterator(&prefix) {
             let session = Session::from_bytes(&*value)?;
@@ -426,9 +465,7 @@ impl Store {
     }
 
     pub fn drop_sessions(&mut self) -> Result<()> {
-        let mut prefix = Vec::new();
-        let _prefix: [u8; 8] = unsafe { mem::transmute(Self::sessions_prefix()) };
-        prefix.extend_from_slice(&_prefix[..]);
+        let prefix =  Self::sessions_prefix();
 
         for (_, value) in self.internal.prefix_iterator(&prefix) {
             let session = Session::from_bytes(&*value)?;
