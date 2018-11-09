@@ -347,25 +347,246 @@ fn test_store_session_key() {
 }
 
 #[test]
-fn test_store_count_sessions() {}
+fn test_store_count_sessions() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let res = store.count_sessions();
+    assert!(res.is_ok());
+
+    let count = res.unwrap();
+    assert_eq!(count, 0);
+
+    let permission = Permission::None;
+
+    let expected_count = 10;
+
+    for _ in 0..expected_count {
+        let _ = store.session(&permission).unwrap();
+    }
+
+    let res = store.count_sessions();
+    assert!(res.is_ok());
+
+    let count = res.unwrap();
+    assert_eq!(count, expected_count);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_list_sessions() {}
+fn test_store_list_sessions() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let res = store.list_sessions();
+    assert!(res.is_ok());
+
+    let list = res.unwrap();
+    assert_eq!(list, vec![]);
+
+    let permission = Permission::None;
+
+    let len = 10;
+    let mut expected_sessions = Vec::new();
+
+    for _ in 0..len {
+        let session = store.session(&permission).unwrap();
+        expected_sessions.push(session);
+    }
+
+    expected_sessions.sort();
+
+    let res = store.list_sessions();
+    assert!(res.is_ok());
+
+    let list = res.unwrap();
+    assert_eq!(list, expected_sessions);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_get_session() {}
+fn test_store_get_session() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let permission = Permission::None;
+
+    let session = store.session(&permission).unwrap();
+
+    let res = store.get_session(session.id);
+    assert!(res.is_ok());
+
+    let found_session = res.unwrap();
+    assert_eq!(found_session, session);
+
+    let res = store.get_session(session.id + 1);
+    assert!(res.is_err());
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_create_session() {}
+fn test_store_create_session() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let res = store.list_sessions();
+    assert!(res.is_ok());
+
+    let list = res.unwrap();
+    assert_eq!(list, vec![]);
+
+    let session = Session::default();
+
+    store.create_session(&session).unwrap();
+
+    let found_session = store.get_session(session.id).unwrap();
+    assert_eq!(found_session, session);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_del_session() {}
+fn test_store_del_session() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let permission = Permission::None;
+
+    let session = store.session(&permission).unwrap();
+
+    let found_session = store.get_session(session.id).unwrap();
+    assert_eq!(found_session, session);
+
+    let res = store.del_session(session.id);
+    assert!(res.is_ok());
+
+    let res = store.get_session(session.id);
+    assert!(res.is_err());
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_cleanup_sessions() {}
+fn test_store_cleanup_sessions() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let permission = Permission::None;
+
+    let count = 10;
+    let mut valid_sessions = Vec::new();
+
+    for _ in 0..count {
+        let session = store.session(&permission).unwrap();
+        valid_sessions.push(session);
+    }
+
+    valid_sessions.sort();
+
+    let id = store.session_id().unwrap();
+
+    for i in 0..count {
+        let mut session = Session::default();
+        
+        let is_expired = session.is_expired().unwrap();
+        assert!(is_expired);
+
+        session.id = id + i;
+
+        store.create_session(&session).unwrap();
+    }
+
+    let count = store.count_sessions().unwrap();
+    assert_eq!(count, 20);
+
+    let res = store.cleanup_sessions();
+    assert!(res.is_ok());
+
+    let count = store.count_sessions().unwrap();
+    assert_eq!(count, 10);
+
+    let list = store.list_sessions().unwrap();
+    assert_eq!(list, valid_sessions);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_drop_sessions() {}
+fn test_store_drop_sessions() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let permission = Permission::None;
+
+    let count = 10;
+
+    for _ in 0..count {
+        let _ = store.session(&permission).unwrap();
+    }
+
+    let count = store.count_sessions().unwrap();
+    assert_eq!(count, 10);
+
+    let res = store.drop_sessions();
+    assert!(res.is_ok());
+
+    let count = store.count_sessions().unwrap();
+    assert_eq!(count, 0);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
 fn test_store_session() {
