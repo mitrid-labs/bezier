@@ -268,22 +268,407 @@ fn test_store_size_prefix() {
 }
 
 #[test]
-fn test_store_dump() {}
+fn test_store_dump() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let permission = Permission::None;
+
+    let count = 10;
+    let mut expected_dump = Vec::new();
+
+    let session_prefix = Store::sessions_prefix();
+
+    for _ in 0..count {
+        let session = store.session(&permission).unwrap();
+
+        let key = Store::session_key(&session).unwrap();
+        
+        let mut store_key = Vec::new();
+        store_key.extend_from_slice(&session_prefix);
+        store_key.extend_from_slice(&key);
+
+        let store_value = session.to_bytes().unwrap();
+
+        expected_dump.push((store_key, store_value));
+    }
+
+    let permission = Permission::Write;
+
+    let write_session = store.session(&permission).unwrap();
+
+    let key = Store::session_key(&write_session).unwrap();
+    
+    let mut store_key = Vec::new();
+    store_key.extend_from_slice(&session_prefix);
+    store_key.extend_from_slice(&key);
+
+    let store_value = write_session.to_bytes().unwrap();
+
+    expected_dump.push((store_key, store_value));
+
+    let key = vec![1,2,3];
+    let value = vec![3,2,1];
+
+    store.create(&write_session, &key, &value).unwrap();
+
+    expected_dump.push((key, value));
+
+    let permission = Permission::Read;
+
+    let read_session = store.session(&permission).unwrap();
+
+    let key = Store::session_key(&read_session).unwrap();
+    
+    let mut store_key = Vec::new();
+    store_key.extend_from_slice(&session_prefix);
+    store_key.extend_from_slice(&key);
+
+    let store_value = read_session.to_bytes().unwrap();
+
+    expected_dump.push((store_key, store_value));
+
+    expected_dump.sort();
+
+    let dump = store.dump().unwrap();
+    assert_eq!(dump, expected_dump);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_dump_range() {}
+fn test_store_dump_range() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let res = store.dump();
+    assert!(res.is_ok());
+
+    let dump = res.unwrap();
+    assert_eq!(dump, vec![]);
+
+    let session = Session::default();
+
+    let prefix = Store::sessions_prefix();
+    
+    let key = Store::session_key(&session).unwrap();
+    
+    let mut store_key = Vec::new();
+    store_key.extend_from_slice(&prefix);
+    store_key.extend_from_slice(&key);
+
+    let store_value = session.to_bytes().unwrap();
+
+    let mut sessions_dump = Vec::new();
+    
+    sessions_dump.push((store_key, store_value));
+
+    store.create_session(&session).unwrap();
+
+    let permission = Permission::Write;
+    let session = store.session(&permission).unwrap();
+    
+    let key = Store::session_key(&session).unwrap();
+    
+    let mut store_key = Vec::new();
+    store_key.extend_from_slice(&prefix);
+    store_key.extend_from_slice(&key);
+
+    let store_value = session.to_bytes().unwrap();
+    
+    sessions_dump.push((store_key, store_value));
+
+    sessions_dump.sort();
+
+    let key = vec![0];
+    let value = vec![1,1,1];
+
+    store.create(&session, &key, &value).unwrap();
+
+    let items_dump = vec![(key.clone(), value.clone())];
+
+    let mut from = Some(vec![]);
+    let mut to = Some(vec![]);
+
+    let res = store.dump_range(from.clone(), to.clone());
+    assert!(res.is_err()); 
+
+    from = Some(prefix.clone());
+    to = None;
+
+    let res = store.dump_range(from.clone(), to.clone());
+    assert!(res.is_ok());
+
+    let dump = res.unwrap();
+    assert_eq!(dump, sessions_dump);
+
+    from = None;
+    to = Some(prefix);
+
+    let res = store.dump_range(from.clone(), to.clone());
+    assert!(res.is_ok());
+
+    let dump = res.unwrap();
+    assert_eq!(dump, items_dump);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_dump_prefix() {}
+fn test_store_dump_prefix() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let res = store.dump();
+    assert!(res.is_ok());
+
+    let dump = res.unwrap();
+    assert_eq!(dump, vec![]);
+
+    let session = Session::default();
+
+    let prefix = Store::sessions_prefix();
+    
+    let key = Store::session_key(&session).unwrap();
+    
+    let mut store_key = Vec::new();
+    store_key.extend_from_slice(&prefix);
+    store_key.extend_from_slice(&key);
+
+    let store_value = session.to_bytes().unwrap();
+
+    let mut sessions_dump = Vec::new();
+    
+    sessions_dump.push((store_key, store_value));
+
+    store.create_session(&session).unwrap();
+
+    let permission = Permission::Write;
+    let session = store.session(&permission).unwrap();
+    
+    let key = Store::session_key(&session).unwrap();
+    
+    let mut store_key = Vec::new();
+    store_key.extend_from_slice(&prefix);
+    store_key.extend_from_slice(&key);
+
+    let store_value = session.to_bytes().unwrap();
+    
+    sessions_dump.push((store_key, store_value));
+
+    sessions_dump.sort();
+
+    let key = vec![0];
+    let value = vec![1,1,1];
+
+    store.create(&session, &key, &value).unwrap();
+
+    let mut all_dump = vec![(key.clone(), value.clone())];
+    all_dump.extend_from_slice(&sessions_dump);
+    all_dump.sort();
+
+    let res = store.dump_prefix(&prefix);
+    assert!(res.is_ok());
+
+    let dump = res.unwrap();
+    assert_eq!(dump, sessions_dump);
+
+    let res = store.dump_prefix(&key);
+    assert!(res.is_ok());
+
+    let dump = res.unwrap();
+    assert_eq!(dump, all_dump);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_drop() {}
+fn test_store_drop() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let permission = Permission::None;
+
+    let count = 10;
+
+    for _ in 0..count {
+        let _ = store.session(&permission).unwrap();
+    }
+
+    let permission = Permission::Write;
+
+    let write_session = store.session(&permission).unwrap();
+
+    let key = vec![1,2,3];
+    let value = vec![3,2,1];
+
+    store.create(&write_session, &key, &value).unwrap();
+
+    let permission = Permission::Read;
+
+    let read_session = store.session(&permission).unwrap();
+
+    let count = store.count(&read_session, None, None).unwrap();
+    assert_eq!(count, 13);
+
+    let res = store.drop();
+    assert!(res.is_ok());
+
+    let dump = store.dump().unwrap();
+    assert_eq!(dump, vec![]);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_drop_range() {}
+fn test_store_drop_range() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let res = store.dump();
+    assert!(res.is_ok());
+
+    let dump = res.unwrap();
+    assert_eq!(dump, vec![]);
+
+    let session = Session::default();
+
+    store.create_session(&session).unwrap();
+
+    let write_permission = Permission::Write;
+    let write_session = store.session(&write_permission).unwrap();
+
+    let read_permission = Permission::Read;
+    let read_session = store.session(&read_permission).unwrap();
+
+    let key = vec![0];
+    let value = vec![1,1,1];
+
+    store.create(&write_session, &key, &value).unwrap();
+
+    let items_dump = vec![(key.clone(), value.clone())];
+
+    let count = store.count(&read_session, None, None).unwrap();
+    assert_eq!(count, 4);
+
+    let mut from = Some(vec![]);
+    let mut to = Some(vec![]);
+
+    let res = store.drop_range(from.clone(), to.clone());
+    assert!(res.is_err());
+
+    let prefix = Store::sessions_prefix();
+
+    from = Some(prefix.clone());
+    to = None;
+
+    let res = store.drop_range(from.clone(), to.clone());
+    assert!(res.is_ok());
+
+    let dump = store.dump().unwrap();
+    assert_eq!(dump, items_dump);
+
+    from = None;
+    to = Some(prefix);
+
+    let res = store.drop_range(from.clone(), to.clone());
+    assert!(res.is_ok());
+
+    let dump = store.dump().unwrap();
+    assert_eq!(dump, vec![]);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
-fn test_store_drop_prefix() {}
+fn test_store_drop_prefix() {
+    let store_file_name = "bezier.store.db";
+    let temp_dir = tempdir().unwrap();
+
+    let store_path = format!("{}", temp_dir.path().join(store_file_name).to_str().unwrap());
+
+    let res = Store::open(&store_path);
+    assert!(res.is_ok());
+
+    let mut store = res.unwrap();
+
+    let res = store.dump();
+    assert!(res.is_ok());
+
+    let dump = res.unwrap();
+    assert_eq!(dump, vec![]);
+
+    let session = Session::default();
+
+    store.create_session(&session).unwrap();
+
+    let write_permission = Permission::Write;
+    let write_session = store.session(&write_permission).unwrap();
+
+    let read_permission = Permission::Read;
+    let read_session = store.session(&read_permission).unwrap();
+
+    let key = vec![0];
+    let value = vec![1,1,1];
+
+    store.create(&write_session, &key, &value).unwrap();
+
+    let items_dump = vec![(key.clone(), value.clone())];
+
+    let count = store.count(&read_session, None, None).unwrap();
+    assert_eq!(count, 4);
+
+    let prefix = Store::sessions_prefix();
+
+    let res = store.drop_prefix(&prefix);
+    assert!(res.is_ok());
+
+    let dump = store.dump().unwrap();
+    assert_eq!(dump, items_dump);
+
+    let res = store.drop_prefix(b"");
+    assert!(res.is_ok());
+
+    let dump = store.dump().unwrap();
+    assert_eq!(dump, vec![]);
+
+    temp_dir.close().unwrap();
+}
 
 #[test]
 fn test_store_session_id() {
