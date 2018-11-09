@@ -409,7 +409,6 @@ fn test_store_session() {
 
 #[test]
 fn test_store_count() {
-/*
     let store_file_name = "bezier.store.db";
     let temp_dir = tempdir().unwrap();
 
@@ -441,9 +440,10 @@ fn test_store_count() {
     assert!(res.is_ok());
 
     let count = res.unwrap();
-    assert_eq!(count, 1);
+    assert_eq!(count, 3);
 
     from = Some(key.clone());
+    to = Some(Store::sessions_prefix());
 
     let res = store.count(&read_session, from.clone(), to.clone());
     assert!(res.is_ok());
@@ -457,12 +457,10 @@ fn test_store_count() {
     assert!(res.is_err());
 
     temp_dir.close().unwrap();
-*/
 }
 
 #[test]
 fn test_store_count_prefix() {
-/*
     let store_file_name = "bezier.store.db";
     let temp_dir = tempdir().unwrap();
 
@@ -493,15 +491,13 @@ fn test_store_count_prefix() {
     assert!(res.is_ok());
 
     let count = res.unwrap();
-    assert_eq!(count, 1);
+    assert_eq!(count, 3);
 
     temp_dir.close().unwrap();
-*/
 }
 
 #[test]
 fn test_store_list() {
-/*
     let store_file_name = "bezier.store.db";
     let temp_dir = tempdir().unwrap();
 
@@ -514,6 +510,7 @@ fn test_store_list() {
 
     let write_permission = Permission::Write;
     let write_session = store.session(&write_permission).unwrap();
+    let write_session_value = write_session.to_bytes().unwrap();
 
     let key = Vec::default();
     let value = Vec::default();
@@ -530,11 +527,13 @@ fn test_store_list() {
 
     let read_permission = Permission::Read;
     let read_session = store.session(&read_permission).unwrap();
+    let read_session_value = read_session.to_bytes().unwrap();
 
     let res = store.list(&read_session, from.clone(), to.clone(), count, skip);
     assert!(res.is_ok());
 
-    let values = vec![value];
+    let mut values = vec![write_session_value, read_session_value, value];
+    values.sort();
 
     let list = res.unwrap();
     assert_eq!(&list, &values);
@@ -566,7 +565,8 @@ fn test_store_list() {
     assert!(res.is_ok());
 
     let list = res.unwrap();
-    assert_eq!(&list, &values);
+    let first = values.first().unwrap().to_owned();
+    assert_eq!(&list, &vec![first]);
 
     skip = 1;
 
@@ -579,12 +579,10 @@ fn test_store_list() {
     assert!(res.is_err());
 
     temp_dir.close().unwrap();
-*/
 }
 
 #[test]
 fn test_store_list_prefix() {
-/*
     let store_file_name = "bezier.store.db";
     let temp_dir = tempdir().unwrap();
 
@@ -597,6 +595,7 @@ fn test_store_list_prefix() {
 
     let write_permission = Permission::Write;
     let write_session = store.session(&write_permission).unwrap();
+    let write_session_value = write_session.to_bytes().unwrap();
 
     let key = Vec::default();
     let value = Vec::default();
@@ -612,11 +611,13 @@ fn test_store_list_prefix() {
 
     let read_permission = Permission::Read;
     let read_session = store.session(&read_permission).unwrap();
+    let read_session_value = read_session.to_bytes().unwrap();
 
     let res = store.list_prefix(&read_session, &prefix, count, skip);
     assert!(res.is_ok());
 
-    let values = vec![value];
+    let mut values = vec![write_session_value, read_session_value, value];
+    values.sort();
 
     let list = res.unwrap();
     assert_eq!(&list, &values);
@@ -639,7 +640,6 @@ fn test_store_list_prefix() {
     assert!(res.is_err());
 
     temp_dir.close().unwrap();
-*/
 }
 
 #[test]

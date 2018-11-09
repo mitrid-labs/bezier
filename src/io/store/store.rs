@@ -355,13 +355,19 @@ impl Store {
         let mut count = 0;
 
         for (key, _) in self.internal.iterator(mode) {
+            if let Some(ref from) = from {
+                if &*key < &from {
+                    continue;
+                }
+            }
+
             if let Some(ref to) = to {
-                if &*key < to {
-                    count += 1;
-                } else {
+                if &*key >= &to {
                     break;
                 }
             }
+            
+            count += 1;
         }
 
         Ok(count)
@@ -417,25 +423,29 @@ impl Store {
         let mut skip = skip;
 
         for (key, value) in self.internal.iterator(mode) {
+            if skip > 0 {
+                skip -= 1;
+                continue;
+            }
+
+            if cnt == 0 {
+                break;
+            }
+
+            if let Some(ref from) = from {
+                if &*key < &from {
+                    continue;
+                }
+            }
+
             if let Some(ref to) = to {
-                if &*key < to {
-                    if cnt == 0 {
-                        break;
-                    } else {
-                        cnt -= 1;
-                    }
-
-                    if skip > 0 {
-                        skip -= 1;
-                        continue;
-                    }
-
-                    list.push((&*value).into());
-                    cnt += 1;
-                } else {
+                if &*key >= &to {
                     break;
                 }
             }
+
+            list.push((&*value).to_vec());
+            cnt -= 1;
         }
 
         Ok(list)
