@@ -14,14 +14,25 @@ use io::Session;
 
 pub const SESSION_DURATION: u64 = 3600; // 1 hour
 
+#[derive(Debug)]
 pub struct Store {
     path: String,
     internal: RocksDB
 }
 
 impl Store {
+    fn options() -> Options {
+        let mut opts = Options::default();
+
+        opts.create_if_missing(true);
+
+        opts
+    }
+
     pub fn open(path: &str) -> Result<Store> {
-        let internal = RocksDB::open_default(path)
+        let options = Store::options();
+
+        let internal = RocksDB::open(&options, path)
             .map_err(|e| format!("{:?}", e))?;
 
         let store = Store {
@@ -37,7 +48,9 @@ impl Store {
     }
 
     pub fn repair_path(path: &str) -> Result<()> {
-        RocksDB::repair(Options::default(), path)
+        let options = Store::options();
+
+        RocksDB::repair(options, path)
             .map_err(|e| format!("{:?}", e))?;
 
         Ok(())
@@ -52,7 +65,9 @@ impl Store {
     }
 
     pub fn destroy_path(path: &str) -> Result<()> {
-        RocksDB::destroy(&Options::default(), path)
+        let options = Store::options();
+
+        RocksDB::destroy(&options, path)
             .map_err(|e| format!("{:?}", e))?;
 
         Ok(())
@@ -61,9 +76,263 @@ impl Store {
     pub fn destroy(self) -> Result<()> {
         let path = self.path();
 
+        drop(self);
+
         Self::destroy_path(&path)?;
 
-        drop(self);
+        Ok(())
+    }
+
+    pub fn size(&self) -> Result<u64> {
+        self.size_prefix(b"")
+    }
+
+    pub fn size_range(&self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<u64> {
+        if let Some(ref from) = from {
+            if let Some(ref to) = to {
+                if from >= to {
+                    return Err(String::from("invalid range"));
+                } 
+            }
+        }
+
+        let mode = if let Some(ref from) = from {
+            IteratorMode::From(&from, Direction::Forward)
+        } else {
+            IteratorMode::Start
+        };
+
+        let mut size = 0;
+
+        for (key, value) in self.internal.iterator(mode) {
+            if let Some(ref to) = to {
+                if &*key >= &to {
+                    break;
+                }
+            }
+
+            size += (&*key).len() as u64;
+            size += (&*value).len() as u64;
+        }
+
+        Ok(size)
+    }
+
+    pub fn size_prefix(&self, prefix: &[u8]) -> Result<u64> {
+        let mut size = 0;
+
+        for (key, value) in self.internal.prefix_iterator(&prefix) {
+            size += (&*key).len() as u64;
+            size += (&*value).len() as u64;
+        }
+
+        Ok(size)
+    }
+
+    pub fn dump(&self) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        self.dump_prefix(b"")
+    }
+
+    pub fn dump_range(&self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        let mut dump = Vec::new();
+
+        if let Some(ref from) = from {
+            if let Some(ref to) = to {
+                if from >= to {
+                    return Err(String::from("invalid range"));
+                } 
+            }
+        }
+
+        let mode = if let Some(ref from) = from {
+            IteratorMode::From(&from, Direction::Forward)
+        } else {
+            IteratorMode::Start
+        };
+
+        for (key, value) in self.internal.iterator(mode) {
+            if let Some(ref to) = to {
+                if &*key >= &to {
+                    break;
+                }
+            }
+
+            dump.push(((&*key).to_vec(), (&*value).to_vec()));
+        }
+
+        Ok(dump)
+    }
+
+    pub fn dump_prefix(&self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        let mut dump = Vec::new();
+
+        for (key, value) in self.internal.prefix_iterator(&prefix) {
+            dump.push(((&*key).to_vec(), (&*value).to_vec()));
+        }
+
+        Ok(dump)
+    }
+
+    pub fn drop(&mut self) -> Result<()> {
+        self.drop_prefix(b"")
+    }
+
+    pub fn drop_range(&mut self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<()> {
+        if let Some(ref from) = from {
+            if let Some(ref to) = to {
+                if from >= to {
+                    return Err(String::from("invalid range"));
+                } 
+            }
+        }
+
+        let mode = if let Some(ref from) = from {
+            IteratorMode::From(&from, Direction::Forward)
+        } else {
+            IteratorMode::Start
+        };
+
+        for (key, _) in self.internal.iterator(mode) {
+            if let Some(ref to) = to {
+                if &*key >= &to {
+                    break;
+                }
+            }
+
+            self._delete(&*key)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn drop_prefix(&mut self, prefix: &[u8]) -> Result<()> {
+        for (key, _) in self.internal.prefix_iterator(&prefix) {
+            self._delete(&*key)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn sessions_prefix() -> Vec<u8> {
+        let mut prefix = Vec::new();
+
+        let _prefix: [u8; 8] = unsafe { mem::transmute(u64::max_value()) };
+        prefix.extend_from_slice(&_prefix);
+    
+        prefix
+    }
+
+    pub fn session_id(&self) -> Result<u64> {
+        let count = self.count_sessions()?;
+        
+        let id = count + 1;
+    
+        Ok(id)
+    }
+
+    fn session_key_from_id(id: u64) -> Vec<u8> {
+        let mut key = Vec::new();
+        let _key: [u8; 8] = unsafe { mem::transmute(id) };
+        key.extend_from_slice(&_key[..]);
+
+        key
+    }
+
+    pub fn session_key(session: &Session) -> Result<Vec<u8>> {
+        session.check()?;
+
+        let key = Self::session_key_from_id(session.id);
+
+        Ok(key)
+    }
+
+    pub fn count_sessions(&self) -> Result<u64> {
+        let prefix =  Self::sessions_prefix();
+
+        let mut count = 0;
+
+        for _ in self.internal.prefix_iterator(&prefix) {
+            count += 1;
+        }
+
+        Ok(count)
+    }
+
+    pub fn list_sessions(&self) -> Result<Vec<Session>> {
+        let prefix =  Self::sessions_prefix();
+
+        let mut list = Vec::new();
+
+        for (_, value) in self.internal.prefix_iterator(&prefix) {
+            let session = Session::from_bytes(&*value)?;
+            list.push(session)
+        }
+
+        Ok(list)
+    }
+
+    pub fn get_session(&self, id: u64) -> Result<Session> {
+        let mut store_key = Vec::new();
+
+        let prefix = Self::sessions_prefix();
+        let key = Self::session_key_from_id(id);
+
+        store_key.extend_from_slice(&prefix);
+        store_key.extend_from_slice(&key);
+
+        let store_value = self._get(&store_key)?;
+
+        Session::from_bytes(&store_value)
+    }
+
+    pub fn create_session(&mut self, session: &Session) -> Result<()> {
+        session.check()?;
+
+        let mut store_key = Vec::new();
+
+        let prefix = Self::sessions_prefix();
+        let key = Self::session_key_from_id(session.id);
+
+        store_key.extend_from_slice(&prefix);
+        store_key.extend_from_slice(&key);
+        
+        let store_value = session.to_bytes()?;
+
+        self._create(&store_key, &store_value)
+    }
+
+    pub fn del_session(&mut self, id: u64) -> Result<()> {
+        let mut store_key = Vec::new();
+
+        let prefix = Self::sessions_prefix();
+        let key = Self::session_key_from_id(id);
+
+        store_key.extend_from_slice(&prefix);
+        store_key.extend_from_slice(&key);
+
+        self._delete(&store_key)
+    }
+
+    pub fn cleanup_sessions(&mut self) -> Result<()> {
+        let prefix =  Self::sessions_prefix();
+
+        for (_, value) in self.internal.prefix_iterator(&prefix) {
+            let session = Session::from_bytes(&*value)?;
+            if session.is_expired()? {
+                self.del_session(session.id)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn drop_sessions(&mut self) -> Result<()> {
+        let prefix =  Self::sessions_prefix();
+
+        for (_, value) in self.internal.prefix_iterator(&prefix) {
+            let session = Session::from_bytes(&*value)?;
+            self.del_session(session.id)?;
+        }
 
         Ok(())
     }
@@ -211,10 +480,10 @@ impl Store {
 
     fn _lookup(&self, key: &[u8]) -> Result<bool> {
         self._get(key)
-            .map(|_| true)
+            .map(|_| true )
             .or_else(|e| {
                 if e == format!("not found") {
-                    Ok(true)
+                    Ok(false)
                 } else {
                     Err(e)
                 }
@@ -226,7 +495,9 @@ impl Store {
             .map_err(|e| format!("{:?}", e))
             .and_then(|opt_v| {
                 match opt_v {
-                    Some(v) => Ok((&*v).to_vec()),
+                    Some(v) => {
+                        Ok((&*v).to_vec())
+                    },
                     None => Err(format!("not found")),
                 }
             })
@@ -256,223 +527,6 @@ impl Store {
     fn _delete(&mut self, key: &[u8]) -> Result<()> {
         self.internal.delete(key)
             .map_err(|e| format!("{:?}", e))
-    }
-
-    pub fn dump(&self) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
-        self.dump_prefix(b"")
-    }
-
-    pub fn dump_range(&self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
-        let mut dump = Vec::new();
-
-        if let Some(ref from) = from {
-            if let Some(ref to) = to {
-                if from >= to {
-                    return Err(String::from("invalid range"));
-                } 
-            }
-        }
-
-        let mode = if let Some(ref from) = from {
-            IteratorMode::From(&from, Direction::Forward)
-        } else {
-            IteratorMode::Start
-        };
-
-        for (key, value) in self.internal.iterator(mode) {
-            dump.push(((&*key).to_vec(), (&*value).to_vec()));
-        }
-
-        Ok(dump)
-    }
-
-    pub fn dump_prefix(&self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
-        let mut dump = Vec::new();
-
-        for (key, value) in self.internal.prefix_iterator(&prefix) {
-            dump.push(((&*key).to_vec(), (&*value).to_vec()));
-        }
-
-        Ok(dump)
-    }
-
-    pub fn size(&self) -> Result<u64> {
-        self.size_prefix(b"")
-    }
-
-    pub fn size_range(&self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<u64> {
-        if let Some(ref from) = from {
-            if let Some(ref to) = to {
-                if from >= to {
-                    return Err(String::from("invalid range"));
-                } 
-            }
-        }
-
-        let mode = if let Some(ref from) = from {
-            IteratorMode::From(&from, Direction::Forward)
-        } else {
-            IteratorMode::Start
-        };
-
-        let mut size = 0;
-
-        for (key, value) in self.internal.iterator(mode) {
-            size += (&*key).len() as u64;
-            size += (&*value).len() as u64;
-        }
-
-        Ok(size)
-    }
-
-    pub fn size_prefix(&self, prefix: &[u8]) -> Result<u64> {
-        let mut size = 0;
-
-        for (key, value) in self.internal.prefix_iterator(&prefix) {
-            size += (&*key).len() as u64;
-            size += (&*value).len() as u64;
-        }
-
-        Ok(size)
-    }
-
-    pub fn drop(&mut self) -> Result<()> {
-        self.drop_prefix(b"")
-    }
-
-    pub fn drop_range(&mut self, from: Option<Vec<u8>>, to: Option<Vec<u8>>) -> Result<()> {
-        if let Some(ref from) = from {
-            if let Some(ref to) = to {
-                if from >= to {
-                    return Err(String::from("invalid range"));
-                } 
-            }
-        }
-
-        let mode = if let Some(ref from) = from {
-            IteratorMode::From(&from, Direction::Forward)
-        } else {
-            IteratorMode::Start
-        };
-
-        for (key, _) in self.internal.iterator(mode) {
-            self._delete(&*key)?;
-        }
-
-        Ok(())
-    }
-
-    pub fn drop_prefix(&mut self, prefix: &[u8]) -> Result<()> {
-        for (key, _) in self.internal.prefix_iterator(&prefix) {
-            self._delete(&*key)?;
-        }
-
-        Ok(())
-    }
-
-    pub fn sessions_prefix() -> Vec<u8> {
-        let mut prefix = Vec::new();
-
-        let _prefix: [u8; 8] = unsafe { mem::transmute(u64::max_value()) };
-        prefix.extend_from_slice(&_prefix);
-    
-        prefix
-    }
-
-    pub fn session_id(&self) -> Result<u64> {
-        let count = self.count_sessions()?;
-        
-        let id = count + 1;
-    
-        Ok(id)
-    }
-
-    fn session_key_from_id(id: u64) -> Vec<u8> {
-        let mut key = Vec::new();
-        let _key: [u8; 8] = unsafe { mem::transmute(id) };
-        key.extend_from_slice(&_key[..]);
-
-        key
-    }
-
-    pub fn session_key(session: &Session) -> Result<Vec<u8>> {
-        session.check()?;
-
-        let key = Self::session_key_from_id(session.id);
-
-        Ok(key)
-    }
-
-    pub fn count_sessions(&self) -> Result<u64> {
-        let prefix =  Self::sessions_prefix();
-
-        let mut count = 0;
-
-        for _ in self.internal.prefix_iterator(&prefix) {
-            count += 1;
-        }
-
-        Ok(count)
-    }
-
-    pub fn list_sessions(&self) -> Result<Vec<Session>> {
-        let prefix =  Self::sessions_prefix();
-
-        let mut list = Vec::new();
-
-        for (_, value) in self.internal.prefix_iterator(&prefix) {
-            let session = Session::from_bytes(&*value)?;
-            list.push(session)
-        }
-
-        Ok(list)
-    }
-
-    pub fn get_session(&self, id: u64) -> Result<Session> {
-        let key = Self::session_key_from_id(id);
-
-        let value = self._get(&key)?;
-
-        Session::from_bytes(&value)
-    }
-
-    pub fn create_session(&mut self, session: &Session) -> Result<()> {
-        session.check()?;
-
-        let key = Self::session_key_from_id(session.id);
-        let value = session.to_bytes()?;
-
-        self._create(&key, &value)
-    }
-
-    pub fn del_session(&mut self, id: u64) -> Result<()> {
-        let key = Self::session_key_from_id(id);
-
-        self._delete(&key)
-    }
-
-    pub fn cleanup_sessions(&mut self) -> Result<()> {
-        let prefix =  Self::sessions_prefix();
-
-        for (_, value) in self.internal.prefix_iterator(&prefix) {
-            let session = Session::from_bytes(&*value)?;
-            if session.is_expired()? {
-                self.del_session(session.id)?;
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn drop_sessions(&mut self) -> Result<()> {
-        let prefix =  Self::sessions_prefix();
-
-        for (_, value) in self.internal.prefix_iterator(&prefix) {
-            let session = Session::from_bytes(&*value)?;
-            self.del_session(session.id)?;
-        }
-
-        Ok(())
     }
 }
 
