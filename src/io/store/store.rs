@@ -223,11 +223,7 @@ impl Store {
     }
 
     pub fn session_id(&self) -> Result<u64> {
-        let count = self.count_sessions()?;
-        
-        let id = count + 1;
-    
-        Ok(id)
+        self.count_sessions()
     }
 
     fn session_key_from_id(id: u64) -> Vec<u8> {
