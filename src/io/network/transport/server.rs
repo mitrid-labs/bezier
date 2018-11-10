@@ -49,7 +49,7 @@ impl BasicServerTransport<Address, ClientTransport> for ServerTransport {
                                         .map_err(|e| format!("{:?}", e))?;
 
         let transport = ClientTransport(tcp_stream);
-        let address = Address::new(socket);
+        let address = Address::from_socket(&socket);
 
         Ok((transport, vec![address]))
     }
