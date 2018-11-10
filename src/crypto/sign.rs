@@ -346,3 +346,5 @@ impl Sign<Seed, PublicKey, SecretKey, Signature> for Ed25519 {
         Self::check(msg, pk, sig)
     }
 }
+
+pub type Signer = Ed25519;
