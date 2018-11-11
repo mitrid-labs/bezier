@@ -4,13 +4,13 @@ use mitrid_core::base::Datable;
 use mitrid_core::io::{Permission, Method, Resource};
 
 use crypto::Digest;
-use model::Block;
+use model::Transaction;
 use io::Message;
 
-pub type LookupBlockReqMsg = Message<Digest>;
-pub type LookupBlockResMsg = Message<bool>;
+pub type LookupTxReqMsg = Message<Digest>;
+pub type LookupTxResMsg = Message<bool>;
 
-pub fn check_lookup_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
+pub fn check_lookup_tx_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
     if msg.session.is_expired()? {
@@ -25,17 +25,17 @@ pub fn check_lookup_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
         return Err(format!("invalid method"));
     }
 
-    if msg.resource != Resource::Block {
+    if msg.resource != Resource::Transaction {
         return Err(format!("invalid resource"));
     }
 
     Ok(())
 }
 
-pub type GetBlockReqMsg = Message<Digest>;
-pub type GetBlockResMsg = Message<Block>;
+pub type GetTxReqMsg = Message<Digest>;
+pub type GetTxResMsg = Message<Transaction>;
 
-pub fn check_get_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
+pub fn check_get_tx_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
     if msg.session.is_expired()? {
@@ -50,17 +50,17 @@ pub fn check_get_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
         return Err(format!("invalid method"));
     }
 
-    if msg.resource != Resource::Block {
+    if msg.resource != Resource::Transaction {
         return Err(format!("invalid resource"));
     }
 
     Ok(())
 }
 
-pub type CreateBlockReqMsg = Message<Block>;
-pub type CreateBlockResMsg = Message<()>;
+pub type CreateTxReqMsg = Message<Transaction>;
+pub type CreateTxResMsg = Message<()>;
 
-pub fn check_create_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
+pub fn check_create_tx_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
     if msg.session.is_expired()? {
@@ -75,7 +75,7 @@ pub fn check_create_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
         return Err(format!("invalid method"));
     }
 
-    if msg.resource != Resource::Block {
+    if msg.resource != Resource::Transaction {
         return Err(format!("invalid resource"));
     }
 

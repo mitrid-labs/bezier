@@ -7,8 +7,8 @@ use crypto::Digest;
 use model::Block;
 use io::Message;
 
-pub type LookupBlockReqMsg = Message<Digest>;
-pub type LookupBlockResMsg = Message<bool>;
+pub type LookupTxReqMsg = Message<Digest>;
+pub type LookupTxResMsg = Message<bool>;
 
 pub fn check_lookup_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
@@ -32,8 +32,8 @@ pub fn check_lookup_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     Ok(())
 }
 
-pub type GetBlockReqMsg = Message<Digest>;
-pub type GetBlockResMsg = Message<Block>;
+pub type GetTxReqMsg = Message<Digest>;
+pub type GetTxResMsg = Message<Block>;
 
 pub fn check_get_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
@@ -57,8 +57,8 @@ pub fn check_get_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     Ok(())
 }
 
-pub type CreateBlockReqMsg = Message<Block>;
-pub type CreateBlockResMsg = Message<()>;
+pub type CreateTxReqMsg = Message<Block>;
+pub type CreateTxResMsg = Message<()>;
 
 pub fn check_create_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
