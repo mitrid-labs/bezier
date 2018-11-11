@@ -1,107 +1,29 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
-use mitrid_core::base::Datable;
-use mitrid_core::io::{Permission, Method, Resource};
 
-use io::{Address, Node};
-use io::Message;
+use io::Node;
+use io::network::message::message::node::*;
+use io::Response;
 
-pub type CountNodesReqMsg = Message<(Option<Address>, Option<Address>)>;
-pub type CountNodesResMsg = Message<u64>;
+pub type CountNodesResponse = Response<u64>;
 
-pub fn check_count_nodes_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
-    if msg.session.permission > Permission::Read {
-        return Err(format!("invalid permission"));
-    }
-
-    if msg.method != Method::Count {
-        return Err(format!("invalid method"));
-    }
-
-    if msg.resource != Resource::Node {
-        return Err(format!("invalid resource"));
-    }
-
-    Ok(())
+pub fn check_count_nodes_res(res: &CountNodesResponse) -> Result<()> {
+    check_count_nodes_msg(&res.message)
 }
 
-pub type ListNodesReqMsg = Message<(Option<Address>, Option<Address>, Option<u64>)>;
-pub type ListNodesResMsg = Message<u64>;
+pub type ListNodesResponse = Response<u64>;
 
-pub fn check_list_nodes_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
-    if msg.session.permission > Permission::Read {
-        return Err(format!("invalid permission"));
-    }
-
-    if msg.method != Method::List {
-        return Err(format!("invalid method"));
-    }
-
-    if msg.resource != Resource::Node {
-        return Err(format!("invalid resource"));
-    }
-
-    Ok(())
+pub fn check_list_nodes_res(res: &ListNodesResponse) -> Result<()> {
+    check_list_nodes_msg(&res.message)
 }
 
-pub type LookupTxReqMsg = Message<Address>;
-pub type LookupTxResMsg = Message<bool>;
+pub type LookupTxResponse = Response<bool>;
 
-pub fn check_lookup_node_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
-    if msg.session.permission > Permission::Read {
-        return Err(format!("invalid permission"));
-    }
-
-    if msg.method != Method::Lookup {
-        return Err(format!("invalid method"));
-    }
-
-    if msg.resource != Resource::Node {
-        return Err(format!("invalid resource"));
-    }
-
-    Ok(())
+pub fn check_lookup_node_res(res: &LookupTxResponse) -> Result<()> {
+    check_lookup_node_msg(&res.message)
 }
 
-pub type GetTxReqMsg = Message<Address>;
-pub type GetTxResMsg = Message<Node>;
+pub type GetTxResponse = Response<Node>;
 
-pub fn check_get_node_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
-    if msg.session.permission > Permission::Read {
-        return Err(format!("invalid permission"));
-    }
-
-    if msg.method != Method::Get {
-        return Err(format!("invalid method"));
-    }
-
-    if msg.resource != Resource::Node {
-        return Err(format!("invalid resource"));
-    }
-
-    Ok(())
+pub fn check_get_node_res(res: &GetTxResponse) -> Result<()> {
+    check_lookup_node_msg(&res.message)
 }

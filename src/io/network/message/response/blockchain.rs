@@ -1,33 +1,11 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
-use mitrid_core::base::Datable;
-use mitrid_core::io::{Permission, Method, Resource};
 
-use crypto::Digest;
 use model::BlockChain;
-use io::Message;
+use io::network::message::message::blockchain::*;
+use io::Response;
 
-pub type GetBlockChainReqMsg = Message<Digest>;
-pub type GetBlockChainResMsg = Message<BlockChain>;
+pub type GetBlockChainResponse = Response<BlockChain>;
 
-pub fn check_get_bc_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
-    if msg.session.permission > Permission::Read {
-        return Err(format!("invalid permission"));
-    }
-
-    if msg.method != Method::Get {
-        return Err(format!("invalid method"));
-    }
-
-    if msg.resource != Resource::BlockGraph {
-        return Err(format!("invalid resource"));
-    }
-
-    Ok(())
+pub fn check_get_bc_res(res: &GetBlockChainResponse) -> Result<()> {
+    check_get_bc_msg(&res.message)
 }
