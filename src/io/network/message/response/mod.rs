@@ -1,4 +1,5 @@
 pub mod response;
+pub mod error;
 pub mod ping;
 pub mod session;
 pub mod utxo;
@@ -8,6 +9,7 @@ pub mod blockchain;
 pub mod node;
 
 pub use self::response::*;
+pub use self::error::*;
 pub use self::ping::*;
 pub use self::session::*;
 pub use self::utxo::*;

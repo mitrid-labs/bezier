@@ -13,10 +13,6 @@ pub type CountUTxOsResMsg = Message<u64>;
 pub fn check_count_utxos_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
     }
@@ -37,10 +33,6 @@ pub type ListUTxOsResMsg = Message<u64>;
 
 pub fn check_list_utxos_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
 
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
@@ -63,10 +55,6 @@ pub type LookupUTxOResMsg = Message<bool>;
 pub fn check_lookup_utxo_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
     }
@@ -87,10 +75,6 @@ pub type GetUTxOResMsg = Message<UTxO>;
 
 pub fn check_get_utxo_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
 
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));

@@ -13,10 +13,6 @@ pub type GetBlockChainResMsg = Message<BlockChain>;
 pub fn check_get_bc_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
     }

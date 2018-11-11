@@ -21,14 +21,8 @@ impl Clone for ClientTransport {
 impl Checkable for ClientTransport {}
 
 impl BasicClientTransport<Address> for ClientTransport {
-    fn connect(addresses: &Vec<Address>) -> Result<Self> {
-        if addresses.len() != 1 {
-            return Err(String::from("invalid length"));
-        }
-
-        let addr = addresses[0].to_owned();
-
-        let tcp_stream = TcpStream::connect(&addr.to_string())
+    fn connect(address: &Address) -> Result<Self> {
+        let tcp_stream = TcpStream::connect(address.to_string())
                             .map_err(|e| format!("{:?}", e))?;
 
         let ct = ClientTransport(tcp_stream);
@@ -63,7 +57,7 @@ impl BasicClientTransport<Address> for ClientTransport {
             .map_err(|e| format!("{:?}", e))
     }
 
-    fn recv(&mut self) -> Result<Vec<Vec<u8>>> {
+    fn recv(&mut self) -> Result<Vec<u8>> {
         let mut buffer: [u8; BUFFER_SIZE] = [0; BUFFER_SIZE];
 
         self.0.read(&mut buffer[..])
@@ -83,6 +77,6 @@ impl BasicClientTransport<Address> for ClientTransport {
             msg.push(buffer[i+4]);
         }
 
-        Ok(vec![msg])
+        Ok(msg)
     }
 }

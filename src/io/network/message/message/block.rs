@@ -13,10 +13,6 @@ pub type LookupBlockResMsg = Message<bool>;
 pub fn check_lookup_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
     }
@@ -38,10 +34,6 @@ pub type GetBlockResMsg = Message<Block>;
 pub fn check_get_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
     }
@@ -62,10 +54,6 @@ pub type CreateBlockResMsg = Message<()>;
 
 pub fn check_create_block_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
 
     if msg.session.permission < Permission::Write {
         return Err(format!("invalid permission"));

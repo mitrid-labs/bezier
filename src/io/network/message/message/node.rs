@@ -12,10 +12,6 @@ pub type CountNodesResMsg = Message<u64>;
 pub fn check_count_nodes_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
     }
@@ -36,10 +32,6 @@ pub type ListNodesResMsg = Message<u64>;
 
 pub fn check_list_nodes_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
 
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
@@ -62,10 +54,6 @@ pub type LookupTxResMsg = Message<bool>;
 pub fn check_lookup_node_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));
     }
@@ -86,10 +74,6 @@ pub type GetTxResMsg = Message<Node>;
 
 pub fn check_get_node_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
-
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
 
     if msg.session.permission > Permission::Read {
         return Err(format!("invalid permission"));

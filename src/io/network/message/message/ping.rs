@@ -9,10 +9,6 @@ pub type PingMsg = Message<()>;
 pub fn check_ping_msg(msg: &PingMsg) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.session.permission > Permission::None {
         return Err(format!("invalid permission"));
     }

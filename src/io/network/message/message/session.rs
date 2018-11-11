@@ -12,10 +12,6 @@ pub type SessionResMsg = Message<Session>;
 pub fn check_session_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
     msg.check()?;
 
-    if msg.session.is_expired()? {
-        return Err(format!("expired session"));
-    }
-
     if msg.method != Method::Session {
         return Err(format!("invalid method"));
     }
