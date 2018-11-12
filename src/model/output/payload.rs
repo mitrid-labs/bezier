@@ -1,3 +1,3 @@
-use crypto::Digest;
+use crypto::{Digest, PublicKey};
 
-pub type OutputPayload = Digest;
+pub type OutputPayload = (PublicKey, Digest);

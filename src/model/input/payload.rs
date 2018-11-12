@@ -7,6 +7,7 @@ use mitrid_core::crypto::Sign;
 
 use crypto::Digest;
 use crypto::{Signer, SecretKey, PublicKey, Signature};
+use model::Output;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Default, Hash, Serialize, Deserialize)]
 pub struct InputPayload {
@@ -65,6 +66,28 @@ impl InputPayload {
         let msg = self.digest.as_slice();
 
         signer.check(msg, &self.public_key, &self.signature)
+    }
+
+    pub fn verify_output(&self, output: &Output) -> Result<bool> {
+        self.check()?;
+        output.check()?;
+
+        if output.payload.0 != self.public_key {
+            return Ok(false);
+        }
+
+        self.verify_signature()
+    }
+
+    pub fn check_output(&self, output: &Output) -> Result<()> {
+        self.check()?;
+        output.check()?;
+
+        if output.payload.0 != self.public_key {
+            return Err(format!("invalid public key"));
+        }
+
+        self.check_signature()
     }
 }
 
