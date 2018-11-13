@@ -1,10 +1,11 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 use mitrid_core::base::Serializable;
+use mitrid_core::io::Store as StoreBase;
 
 use crypto::Hasher;
 use io::Store;
-use io::{Request, SessionRequest, Response};
+use io::{Message, Request, SessionRequest, Response};
 
 pub fn session(store: &mut Store,
                request: &Request)

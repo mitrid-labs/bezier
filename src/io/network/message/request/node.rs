@@ -79,8 +79,8 @@ impl NodeRequest {
         Ok((from, to))
     }
 
-    pub fn parse_list(req: &Request) -> Result<(Option<Address>, Option<Address>, Option<u64>)> {
-        let (from, to, count): (Option<Address>, Option<Address>, Option<u64>) = parse_req(req)?;
+    pub fn parse_list(req: &Request) -> Result<(Option<Address>, Option<Address>, Option<u64>, u64)> {
+        let (from, to, count, skip): (Option<Address>, Option<Address>, Option<u64>, u64) = parse_req(req)?;
 
         from.check()?;
 
@@ -104,7 +104,7 @@ impl NodeRequest {
             }
         }
 
-        Ok((from, to, count))
+        Ok((from, to, count, skip))
     }
 
     pub fn parse_lookup(req: &Request) -> Result<Address> {

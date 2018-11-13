@@ -1,18 +1,15 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 use mitrid_core::base::Serializable;
-use mitrid_core::base::Datable;
 use mitrid_core::io::Storable;
 
 use crypto::Hasher;
 use model::UTxO;
 use io::Node;
 use io::Store;
-use io::network::{Request, Response};
+use io::network::{Message, Request, Response};
 use io::network::message::request::node::*;
-use io::network::message::response::node::*;
 use io::network::message::request::utxo::*;
-use io::network::message::response::utxo::*;
 
 pub fn count_handler(store: &mut Store,
                      request: &Request)
@@ -20,15 +17,15 @@ pub fn count_handler(store: &mut Store,
 {
     request.check()?;
 
-    let count = if NodeRequest::verify_count()? {
+    let count = if NodeRequest::verify_count(request)? {
         let (from, to) = NodeRequest::parse_count(request)?;
         Node::store_count(store, from, to)?;
-    } else if UTxORequest::verify_count()? {
+    } else if UTxORequest::verify_count(request)? {
         let (from, to) = UTxORequest::parse_count(request)?;
         UTxO::store_count(store, from, to)?;
     } else {
         return Err(format!("invalid request"));
-    }
+    };
 
     let payload = count.to_bytes()?;
 
