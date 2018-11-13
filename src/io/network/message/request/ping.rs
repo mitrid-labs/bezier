@@ -1,13 +1,20 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
 
 use io::network::message::message::ping::*;
-use io::Request;
+use io::network::message::request::request::*;
 
-pub type PingRequest = Request<()>;
+pub struct PingRequest;
 
-pub fn check_ping_req(req: &PingRequest) -> Result<()> {
-    req.check()?;
+impl PingRequest {
+    pub fn verify(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-    check_ping_msg(&req.message)
+        PingMessage::verify(&req.message)
+    }
+
+    pub fn check(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        PingMessage::check(&req.message)
+    }
 }

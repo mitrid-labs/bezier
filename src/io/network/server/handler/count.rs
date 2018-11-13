@@ -2,55 +2,70 @@ use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 use mitrid_core::base::Datable;
 use mitrid_core::io::Storable;
-use mitrid_core::io::{Method, Resource};
 
 use std::any::Any;
 
-use crypto::Digest;
 use model::UTxO;
 use io::Node;
 use io::Store;
-use io::Address;
-use io::{Request, Response};
+use io::network::{Request, Response};
 use io::network::message::request::node::*;
-//use io::network::message::response::node::*;
+use io::network::message::response::node::*;
 use io::network::message::request::utxo::*;
-//use io::network::message::response::utxo::*;
+use io::network::message::response::utxo::*;
 
-pub fn count<P, R>(store: &mut Store,
-                   request: &Request<P>)
+pub fn count_handler<P, R>(store: &mut Store,
+                           request: &Request<P>)
     -> Result<Response<R>>
-    where   P: Any + Datable,
+    where   P: Datable,
             R: Datable
 {
     request.check()?;
 
-    if request.message.method != Method::Count {
-        return Err(format!("invalid method"));
+    let req: &Any = request as &Any;
+
+    if req.is::<CountNodesRequest>() {
+        let req = req.downcast_ref::<CountNodesRequest>().unwrap();
+        let res: Response<P> = count_nodes_handler(store, req)?;
+        let res: &Any = res as &Any;
+        let res = res.downcast_ref::<Response<R>>().unwrap()
+    } else if req.is::<CountUTxOsRequest>() {
+        // TODO
+    } else {
+        // TODO
     }
 
-    match request.message.resource {
-        Resource::Node => {
-            check_count_nodes_req(request as &CountNodesRequest)?;
+    unreachable!()
+}
 
-            let count = Node::store_count(store, payload.0, payload.1)?;
-            
-            // TODO: build the response and return it
+pub fn count_nodes_handler(store: &mut Store,
+                           request: &CountNodesRequest)
+    -> Result<CountNodesResponse>
+{
+    request.check()?;
+    check_count_nodes_req(request)?;
 
-            unreachable!()
+    let payload = request.message.payload.clone();
 
-        },
-        Resource::Coin => {
-            check_count_utxos_req(request as &CountUTxOsRequest)?;
-            
-            let count = UTxO::store_count(store, payload.0, payload.1)?;
-            
-            // TODO: build the response and return it
+    let _count = Node::store_count(store, payload.0, payload.1)?;
+    
+    // TODO: build the response and return it
 
-            unreachable!()
-        },
-        _ => {
-            Err(format!("invalid resource"))
-        },
-    }
+    unreachable!()
+}
+
+pub fn count_utxos_handler(store: &mut Store,
+                           request: &CountUTxOsRequest)
+    -> Result<CountUTxOsResponse>
+{
+    request.check()?;
+    check_count_utxos_req(request)?;
+
+    let payload = request.message.payload.clone();
+
+    let _count = UTxO::store_count(store, payload.0, payload.1)?;
+    
+    // TODO: build the response and return it
+
+    unreachable!()
 }

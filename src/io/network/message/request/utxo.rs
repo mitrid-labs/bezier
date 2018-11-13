@@ -1,54 +1,57 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
 
-use crypto::Digest;
 use io::network::message::message::utxo::*;
-use io::Request;
+use io::network::message::request::request::*;
 
-pub type CountUTxOsRequest = Request<(Option<Digest>, Option<Digest>)>;
 
-pub fn check_count_utxos_req(req: &CountUTxOsRequest) -> Result<()> {
-    req.check()?;
+pub struct UTxORequest;
 
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+impl UTxORequest {
+    pub fn verify_count(req: &Request) -> Result<bool> {
+        check_req(req)?;
+
+        UTxOMessage::verify_count(&req.message)
     }
 
-    check_count_utxos_msg(&req.message)
-}
+    pub fn verify_list(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type ListUTxOsRequest = Request<(Option<Digest>, Option<Digest>, Option<u64>)>;
-
-pub fn check_list_utxos_req(req: &ListUTxOsRequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        UTxOMessage::verify_list(&req.message)
     }
 
-    check_list_utxos_msg(&req.message)
-}
+    pub fn verify_lookup(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type LookupUTxORequest = Request<Digest>;
-
-pub fn check_lookup_utxo_req(req: &LookupUTxORequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        UTxOMessage::verify_lookup(&req.message)
     }
 
-    check_lookup_utxo_msg(&req.message)
-}
+    pub fn verify_get(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type GetUTxORequest = Request<Digest>;
-
-pub fn check_get_utxo_req(req: &GetUTxORequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        UTxOMessage::verify_get(&req.message)
     }
 
-    check_get_utxo_msg(&req.message)
+    pub fn check_count(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        UTxOMessage::check_count(&req.message)
+    }
+
+    pub fn check_list(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        UTxOMessage::check_list(&req.message)
+    }
+
+    pub fn check_lookup(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        UTxOMessage::check_lookup(&req.message)
+    }
+
+    pub fn check_get(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        UTxOMessage::check_get(&req.message)
+    }
 }

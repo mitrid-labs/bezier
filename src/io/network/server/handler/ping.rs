@@ -1,14 +1,13 @@
 use mitrid_core::base::Result;
 
 use io::Store;
-use io::network::message::request::ping::*;
-use io::PingResponse;
+use io::{Request, PingRequest, Response};
 
 pub fn ping(_store: &mut Store,
-            request: &PingRequest)
-    -> Result<PingResponse>
+            request: &Request)
+    -> Result<Response>
 {
-    check_ping_req(request)?;
+    PingRequest::check(request)?;
 
-    PingResponse::new(&request.message)
+    Response::new(&request.message)
 }

@@ -1,23 +1,45 @@
 use mitrid_core::base::Result;
+use mitrid_core::base::Checkable;
 
-use model::Transaction;
 use io::network::message::message::transaction::*;
-use io::Response;
+use io::network::message::response::response::*;
 
-pub type LookupTxResponse = Response<bool>;
+pub struct TransactionResponse;
 
-pub fn check_lookup_tx_res(res: &LookupTxResponse) -> Result<()> {
-    check_lookup_tx_msg(&res.message)
-}
+impl TransactionResponse {
+    pub fn verify_lookup(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub type GetTxResponse = Response<Transaction>;
+        TransactionMessage::verify_lookup(&res.message)
+    }
 
-pub fn check_get_tx_res(res: &GetTxResponse) -> Result<()> {
-    check_get_tx_msg(&res.message)
-}
+    pub fn verify_get(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub type CreateTxResponse = Response<()>;
+        TransactionMessage::verify_get(&res.message)
+    }
 
-pub fn check_create_tx_res(res: &CreateTxResponse) -> Result<()> {
-    check_create_tx_msg(&res.message)
+    pub fn verify_create(res: &Response) -> Result<bool> {
+        res.check()?;
+
+        TransactionMessage::verify_create(&res.message)
+    }
+
+    pub fn check_lookup(res: &Response) -> Result<()> {
+        res.check()?;
+
+        TransactionMessage::check_lookup(&res.message)
+    }
+
+    pub fn check_get(res: &Response) -> Result<()> {
+        res.check()?;
+
+        TransactionMessage::check_get(&res.message)
+    }
+
+    pub fn check_create(res: &Response) -> Result<()> {
+        res.check()?;
+
+        TransactionMessage::check_create(&res.message)
+    }
 }

@@ -1,71 +1,32 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
-use mitrid_core::base::Datable;
-use mitrid_core::io::{Permission, Method, Resource};
+use mitrid_core::io::{Method, Resource};
 
-use crypto::Digest;
-use model::Transaction;
-use io::Message;
+use io::network::message::message::message::*;
 
-pub type LookupTxReqMsg = Message<Digest>;
-pub type LookupTxResMsg = Message<bool>;
+pub struct TransactionMessage;
 
-pub fn check_lookup_tx_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.permission > Permission::Read {
-        return Err(format!("invalid permission"));
+impl TransactionMessage {
+    pub fn verify_lookup(msg: &Message) -> Result<bool> {
+        verify_read_msg(msg, &Method::Lookup, &Resource::Transaction)
     }
 
-    if msg.method != Method::Lookup {
-        return Err(format!("invalid method"));
+    pub fn verify_get(msg: &Message) -> Result<bool> {
+        verify_read_msg(msg, &Method::Get, &Resource::Transaction)
     }
 
-    if msg.resource != Resource::Transaction {
-        return Err(format!("invalid resource"));
+    pub fn verify_create(msg: &Message) -> Result<bool> {
+        verify_write_msg(msg, &Method::Create, &Resource::Transaction)
     }
 
-    Ok(())
-}
-
-pub type GetTxReqMsg = Message<Digest>;
-pub type GetTxResMsg = Message<Transaction>;
-
-pub fn check_get_tx_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.permission > Permission::Read {
-        return Err(format!("invalid permission"));
+    pub fn check_lookup(msg: &Message) -> Result<()> {
+        check_read_msg(msg, &Method::Lookup, &Resource::Transaction)
     }
 
-    if msg.method != Method::Get {
-        return Err(format!("invalid method"));
+    pub fn check_get(msg: &Message) -> Result<()> {
+        check_read_msg(msg, &Method::Get, &Resource::Transaction)
     }
 
-    if msg.resource != Resource::Transaction {
-        return Err(format!("invalid resource"));
+    pub fn check_create(msg: &Message) -> Result<()> {
+        check_write_msg(msg, &Method::Create, &Resource::Transaction)
     }
-
-    Ok(())
-}
-
-pub type CreateTxReqMsg = Message<Transaction>;
-pub type CreateTxResMsg = Message<()>;
-
-pub fn check_create_tx_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.permission < Permission::Write {
-        return Err(format!("invalid permission"));
-    }
-
-    if msg.method != Method::Create {
-        return Err(format!("invalid method"));
-    }
-
-    if msg.resource != Resource::Transaction {
-        return Err(format!("invalid resource"));
-    }
-
-    Ok(())
 }

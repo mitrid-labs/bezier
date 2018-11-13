@@ -1,38 +1,58 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 
-use model::UTxO;
 use io::network::message::message::utxo::*;
-use io::Response;
+use io::network::message::response::response::*;
 
-pub type CountUTxOsResponse = Response<u64>;
 
-pub fn check_count_utxos_res(res: &CountUTxOsResponse) -> Result<()> {
-    res.check()?;
+pub struct UTxOResponse;
 
-    check_count_utxos_msg(&res.message)
-}
+impl UTxOResponse {
+    pub fn verify_count(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub type ListUTxOsResponse = Response<u64>;
+        UTxOMessage::verify_count(&res.message)
+    }
 
-pub fn check_list_utxos_res(res: &ListUTxOsResponse) -> Result<()> {
-    res.check()?;
+    pub fn verify_list(res: &Response) -> Result<bool> {
+        res.check()?;
 
-    check_list_utxos_msg(&res.message)
-}
+        UTxOMessage::verify_list(&res.message)
+    }
 
-pub type LookupUTxOResponse = Response<bool>;
+    pub fn verify_lookup(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub fn check_lookup_utxo_res(res: &LookupUTxOResponse) -> Result<()> {
-    res.check()?;
+        UTxOMessage::verify_lookup(&res.message)
+    }
 
-    check_lookup_utxo_msg(&res.message)
-}
+    pub fn verify_get(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub type GetUTxOResponse = Response<UTxO>;
+        UTxOMessage::verify_get(&res.message)
+    }
 
-pub fn check_get_utxo_res(res: &GetUTxOResponse) -> Result<()> {
-    res.check()?;
+    pub fn check_count(res: &Response) -> Result<()> {
+        res.check()?;
 
-    check_lookup_utxo_msg(&res.message)
+        UTxOMessage::check_count(&res.message)
+    }
+
+    pub fn check_list(res: &Response) -> Result<()> {
+        res.check()?;
+
+        UTxOMessage::check_list(&res.message)
+    }
+
+    pub fn check_lookup(res: &Response) -> Result<()> {
+        res.check()?;
+
+        UTxOMessage::check_lookup(&res.message)
+    }
+
+    pub fn check_get(res: &Response) -> Result<()> {
+        res.check()?;
+
+        UTxOMessage::check_get(&res.message)
+    }
 }

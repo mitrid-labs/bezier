@@ -1,38 +1,58 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 
-use io::Node;
 use io::network::message::message::node::*;
-use io::Response;
+use io::network::message::response::response::*;
 
-pub type CountNodesResponse = Response<u64>;
+pub struct NodeResponse;
 
-pub fn check_count_nodes_res(res: &CountNodesResponse) -> Result<()> {
-    res.check()?;
+impl NodeResponse {
+    pub fn verify_count(res: &Response) -> Result<bool> {
+        res.check()?;
 
-    check_count_nodes_msg(&res.message)
-}
+        NodeMessage::verify_count(&res.message)
+    }
 
-pub type ListNodesResponse = Response<u64>;
+    pub fn verify_list(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub fn check_list_nodes_res(res: &ListNodesResponse) -> Result<()> {
-    res.check()?;
+        NodeMessage::verify_list(&res.message)
+    }
 
-    check_list_nodes_msg(&res.message)
-}
+    pub fn verify_lookup(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub type LookupTxResponse = Response<bool>;
+        NodeMessage::verify_lookup(&res.message)
+    }
 
-pub fn check_lookup_node_res(res: &LookupTxResponse) -> Result<()> {
-    res.check()?;
+    pub fn verify_get(res: &Response) -> Result<bool> {
+        res.check()?;
 
-    check_lookup_node_msg(&res.message)
-}
+        NodeMessage::verify_get(&res.message)
+    }
 
-pub type GetTxResponse = Response<Node>;
+    pub fn check_count(res: &Response) -> Result<()> {
+        res.check()?;
 
-pub fn check_get_node_res(res: &GetTxResponse) -> Result<()> {
-    res.check()?;
+        NodeMessage::check_count(&res.message)
+    }
 
-    check_lookup_node_msg(&res.message)
+    pub fn check_list(res: &Response) -> Result<()> {
+        res.check()?;
+
+        NodeMessage::check_list(&res.message)
+    }
+
+    pub fn check_lookup(res: &Response) -> Result<()> {
+        res.check()?;
+
+        NodeMessage::check_lookup(&res.message)
+    }
+
+    pub fn check_get(res: &Response) -> Result<()> {
+        res.check()?;
+
+        NodeMessage::check_get(&res.message)
+    }
+
 }

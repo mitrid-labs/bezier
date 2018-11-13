@@ -1,54 +1,57 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
 
 use io::network::message::message::node::*;
-use io::Address;
-use io::Request;
+use io::network::message::request::request::*;
 
-pub type CountNodesRequest = Request<(Option<Address>, Option<Address>)>;
+pub struct NodeRequest;
 
-pub fn check_count_nodes_req(req: &CountNodesRequest) -> Result<()> {
-    req.check()?;
+impl NodeRequest {
+    pub fn verify_count(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        NodeMessage::verify_count(&req.message)
     }
 
-    check_count_nodes_msg(&req.message)
-}
+    pub fn verify_list(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type ListNodesRequest = Request<(Option<Address>, Option<Address>, Option<u64>)>;
-
-pub fn check_list_nodes_req(req: &ListNodesRequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        NodeMessage::verify_list(&req.message)
     }
 
-    check_list_nodes_msg(&req.message)
-}
+    pub fn verify_lookup(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type LookupTxRequest = Request<Address>;
-
-pub fn check_lookup_node_req(req: &LookupTxRequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        NodeMessage::verify_lookup(&req.message)
     }
 
-    check_lookup_node_msg(&req.message)
-}
+    pub fn verify_get(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type GetTxRequest = Request<Address>;
-
-pub fn check_get_node_req(req: &GetTxRequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        NodeMessage::verify_get(&req.message)
     }
 
-    check_get_node_msg(&req.message)
+    pub fn check_count(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        NodeMessage::check_count(&req.message)
+    }
+
+    pub fn check_list(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        NodeMessage::check_list(&req.message)
+    }
+
+    pub fn check_lookup(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        NodeMessage::check_lookup(&req.message)
+    }
+
+    pub fn check_get(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        NodeMessage::check_get(&req.message)
+    }
+
 }

@@ -1,14 +1,20 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
-use mitrid_core::io::Permission;
 
 use io::network::message::message::session::*;
-use io::Request;
+use io::network::message::request::request::*;
 
-pub type SessionRequest = Request<Permission>;
+pub struct SessionRequest;
 
-pub fn check_session_req(req: &SessionRequest) -> Result<()> {
-    req.check()?;
+impl SessionRequest {
+    pub fn verify(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-    check_session_msg(&req.message)
+        SessionMessage::verify(&req.message)
+    }
+
+    pub fn check(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        SessionMessage::check(&req.message)
+    }
 }

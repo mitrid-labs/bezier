@@ -2,16 +2,28 @@ use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 use mitrid_core::io::Resource;
 
-use io::Message;
+use io::network::message::message::message::*;
 
-pub type ErrorMsg = Message<String>;
+pub struct ErrorMessage;
 
-pub fn check_error_msg(msg: &ErrorMsg) -> Result<()> {
-    msg.check()?;
+impl ErrorMessage {
+    pub fn verify(msg: &Message) -> Result<bool> {
+        msg.check()?;
 
-    if msg.resource != Resource::Error {
-        return Err(format!("invalid resource"));
+        if msg.resource != Resource::Error {
+            return Ok(false);
+        }
+
+        Ok(true)
     }
 
-    Ok(())
+    pub fn check(msg: &Message) -> Result<()> {
+        msg.check()?;
+
+        if msg.resource != Resource::Error {
+            return Err(format!("invalid resource"));
+        }
+
+        Ok(())
+    }
 }

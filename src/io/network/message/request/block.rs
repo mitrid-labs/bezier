@@ -1,43 +1,44 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
 
-use crypto::Digest;
-use model::Block;
 use io::network::message::message::block::*;
-use io::Request;
+use io::network::message::request::request::*;
 
-pub type LookupBlockRequest = Request<Digest>;
+pub struct BlockRequest;
 
-pub fn check_lookup_block_req(req: &LookupBlockRequest) -> Result<()> {
-    req.check()?;
+impl BlockRequest {
+    pub fn verify_lookup(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        BlockMessage::verify_lookup(&req.message)
     }
 
-    check_lookup_block_msg(&req.message)
-}
+    pub fn verify_get(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type GetBlockRequest = Request<Digest>;
-
-pub fn check_get_block_req(req: &GetBlockRequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        BlockMessage::verify_get(&req.message)
     }
 
-    check_lookup_block_msg(&req.message)
-}
+    pub fn verify_create(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type CreateBlockRequest = Request<Block>;
-
-pub fn check_create_block_req(req: &CreateBlockRequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        BlockMessage::verify_create(&req.message)
     }
 
-    check_create_block_msg(&req.message)
+    pub fn check_lookup(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        BlockMessage::check_lookup(&req.message)
+    }
+
+    pub fn check_get(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        BlockMessage::check_get(&req.message)
+    }
+
+    pub fn check_create(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        BlockMessage::check_create(&req.message)
+    }
 }

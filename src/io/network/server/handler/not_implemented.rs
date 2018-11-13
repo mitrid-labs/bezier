@@ -1,25 +1,27 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Datable;
 
 use crypto::Hasher;
 use io::Store;
-use io::{Request, ErrorMsg, ErrorResponse};
+use io::{Message, Response};
+use io::{Request, check_req};
 
-pub fn not_implemented<P: Datable>(_store: &mut Store,
-                                   request: &Request<P>)
-    -> Result<ErrorResponse>
+pub fn not_implemented(_store: &mut Store,
+                       request: &Request)
+    -> Result<Response>
 {
+    check_req(request)?;
+
     let mut hasher = Hasher{};
 
-    let payload = String::from("not not_implemented");
+    let payload = "not not_implemented".as_bytes().to_vec();
 
-    let error_message = ErrorMsg::new()
-                                .meta(&request.message.meta)?
-                                .session(&request.message.session)?
-                                .method(&request.message.method)?
-                                .resource(&request.message.resource)?
-                                .payload(&payload)?
-                                .finalize(&mut hasher)?;
+    let error_message = Message::new()
+                            .meta(&request.message.meta)?
+                            .session(&request.message.session)?
+                            .method(&request.message.method)?
+                            .resource(&request.message.resource)?
+                            .payload(&payload)?
+                            .finalize(&mut hasher)?;
 
-    ErrorResponse::new(&error_message)
+    Response::new(&error_message)
 }

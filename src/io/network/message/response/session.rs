@@ -1,14 +1,21 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 
-use io::Session;
 use io::network::message::message::session::*;
-use io::Response;
+use io::network::message::response::response::*;
 
-pub type SessionResponse = Response<Session>;
+pub struct SessionResponse;
 
-pub fn check_session_res(res: &SessionResponse) -> Result<()> {
-    res.check()?;
+impl SessionResponse {
+    pub fn verify(res: &Response) -> Result<bool> {
+        res.check()?;
 
-    check_session_msg(&res.message)
+        SessionMessage::verify(&res.message)
+    }
+
+    pub fn check(res: &Response) -> Result<()> {
+        res.check()?;
+
+        SessionMessage::check(&res.message)
+    }
 }

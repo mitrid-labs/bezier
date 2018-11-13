@@ -1,24 +1,16 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
-use mitrid_core::base::Datable;
-use mitrid_core::io::{Permission, Method, Resource};
+use mitrid_core::io::{Method, Resource};
 
-use io::Session;
-use io::Message;
+use io::network::message::message::message::*;
 
-pub type SessionReqMsg = Message<Permission>;
-pub type SessionResMsg = Message<Session>;
+pub struct SessionMessage;
 
-pub fn check_session_msg<P: Datable>(msg: &Message<P>) -> Result<()> {
-    msg.check()?;
-
-    if msg.method != Method::Session {
-        return Err(format!("invalid method"));
+impl SessionMessage {
+    pub fn verify(msg: &Message) -> Result<bool> {
+        verify_read_msg(msg, &Method::Session, &Resource::Session)
     }
 
-    if msg.resource != Resource::Session {
-        return Err(format!("invalid resource"));
+    pub fn check(msg: &Message) -> Result<()> {
+        check_read_msg(msg, &Method::Session, &Resource::Session)
     }
-
-    Ok(())
 }

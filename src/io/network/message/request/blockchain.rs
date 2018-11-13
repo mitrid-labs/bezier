@@ -1,18 +1,20 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
 
-use crypto::Digest;
 use io::network::message::message::blockchain::*;
-use io::Request;
+use io::network::message::request::request::*;
 
-pub type GetBlockChainRequest = Request<Digest>;
+pub struct BlockChainRequest;
 
-pub fn check_get_bc_req(req: &GetBlockChainRequest) -> Result<()> {
-    req.check()?;
+impl BlockChainRequest {
+    pub fn verify_get(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        BlockChainMessage::verify_get(&req.message)
     }
 
-    check_get_bc_msg(&req.message)
+    pub fn check_get(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        BlockChainMessage::check_get(&req.message)
+    }
 }

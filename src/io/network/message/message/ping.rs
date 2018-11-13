@@ -1,25 +1,16 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
-use mitrid_core::io::{Permission, Method, Resource};
+use mitrid_core::io::{Method, Resource};
 
-use io::Message;
+use io::network::message::message::message::*;
 
-pub type PingMsg = Message<()>;
+pub struct PingMessage;
 
-pub fn check_ping_msg(msg: &PingMsg) -> Result<()> {
-    msg.check()?;
-
-    if msg.session.permission > Permission::None {
-        return Err(format!("invalid permission"));
+impl PingMessage {
+    pub fn verify(msg: &Message) -> Result<bool> {
+        verify_none_msg(msg, &Method::Ping, &Resource::None)
     }
 
-    if msg.method != Method::Ping {
-        return Err(format!("invalid method"));
+    pub fn check(msg: &Message) -> Result<()> {
+        check_none_msg(msg, &Method::Ping, &Resource::None)
     }
-
-    if msg.resource != Resource::None {
-        return Err(format!("invalid resource"));
-    }
-
-    Ok(())
 }

@@ -1,30 +1,45 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 
-use model::Block;
 use io::network::message::message::block::*;
-use io::Response;
+use io::network::message::response::response::*;
 
-pub type LookupTxResponse = Response<bool>;
+pub struct BlockResponse;
 
-pub fn check_lookup_block_res(res: &LookupTxResponse) -> Result<()> {
-    res.check()?;
+impl BlockResponse {
+    pub fn verify_lookup(res: &Response) -> Result<bool> {
+        res.check()?;
 
-    check_lookup_block_msg(&res.message)
-}
+        BlockMessage::verify_lookup(&res.message)
+    }
 
-pub type GetTxResponse = Response<Block>;
+    pub fn verify_get(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub fn check_get_block_res(res: &GetTxResponse) -> Result<()> {
-    res.check()?;
+        BlockMessage::verify_get(&res.message)
+    }
 
-    check_get_block_msg(&res.message)
-}
+    pub fn verify_create(res: &Response) -> Result<bool> {
+        res.check()?;
 
-pub type CreateTxResponse = Response<()>;
+        BlockMessage::verify_create(&res.message)
+    }
 
-pub fn check_create_block_res(res: &CreateTxResponse) -> Result<()> {
-    res.check()?;
+    pub fn check_lookup(res: &Response) -> Result<()> {
+        res.check()?;
 
-    check_get_block_msg(&res.message)
+        BlockMessage::check_lookup(&res.message)
+    }
+
+    pub fn check_get(res: &Response) -> Result<()> {
+        res.check()?;
+
+        BlockMessage::check_get(&res.message)
+    }
+
+    pub fn check_create(res: &Response) -> Result<()> {
+        res.check()?;
+
+        BlockMessage::check_create(&res.message)
+    }
 }

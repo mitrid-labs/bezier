@@ -1,43 +1,44 @@
 use mitrid_core::base::Result;
-use mitrid_core::base::Checkable;
 
-use crypto::Digest;
-use model::Transaction;
 use io::network::message::message::transaction::*;
-use io::Request;
+use io::network::message::request::request::*;
 
-pub type LookupTxRequest = Request<Digest>;
+pub struct TransactionRequest;
 
-pub fn check_lookup_tx_req(req: &LookupTxRequest) -> Result<()> {
-    req.check()?;
+impl TransactionRequest {
+    pub fn verify_lookup(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        TransactionMessage::verify_lookup(&req.message)
     }
 
-    check_lookup_tx_msg(&req.message)
-}
+    pub fn verify_get(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type GetTxRequest = Request<Digest>;
-
-pub fn check_get_tx_req(req: &GetTxRequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        TransactionMessage::verify_get(&req.message)
     }
 
-    check_get_tx_msg(&req.message)
-}
+    pub fn verify_create(req: &Request) -> Result<bool> {
+        check_req(req)?;
 
-pub type CreateTxRequest = Request<Transaction>;
-
-pub fn check_create_tx_req(req: &CreateTxRequest) -> Result<()> {
-    req.check()?;
-
-    if req.message.session.is_expired()? {
-        return Err(format!("expired session"));
+        TransactionMessage::verify_create(&req.message)
     }
 
-    check_create_tx_msg(&req.message)
+    pub fn check_lookup(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        TransactionMessage::check_lookup(&req.message)
+    }
+
+    pub fn check_get(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        TransactionMessage::check_get(&req.message)
+    }
+
+    pub fn check_create(req: &Request) -> Result<()> {
+        check_req(req)?;
+
+        TransactionMessage::check_create(&req.message)
+    }
 }
