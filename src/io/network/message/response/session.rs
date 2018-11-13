@@ -1,6 +1,7 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 
+use io::Session;
 use io::network::message::message::session::*;
 use io::network::message::response::response::*;
 
@@ -17,5 +18,9 @@ impl SessionResponse {
         res.check()?;
 
         SessionMessage::check(&res.message)
+    }
+
+    pub fn parse(res: &Response) -> Result<Session> {
+        parse_res(res)
     }
 }

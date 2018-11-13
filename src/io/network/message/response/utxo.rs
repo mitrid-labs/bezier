@@ -1,6 +1,7 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 
+use model::UTxO;
 use io::network::message::message::utxo::*;
 use io::network::message::response::response::*;
 
@@ -54,5 +55,21 @@ impl UTxOResponse {
         res.check()?;
 
         UTxOMessage::check_get(&res.message)
+    }
+
+    pub fn parse_count(res: &Response) -> Result<u64> {
+        parse_res(res)
+    }
+
+    pub fn parse_list(res: &Response) -> Result<Vec<UTxO>> {
+        parse_res(res)
+    }
+
+    pub fn parse_lookup(res: &Response) -> Result<bool> {
+        parse_res(res)
+    }
+
+    pub fn parse_get(res: &Response) -> Result<UTxO> {
+        parse_res(res)
     }
 }

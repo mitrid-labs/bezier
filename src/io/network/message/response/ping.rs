@@ -18,4 +18,8 @@ impl PingResponse {
 
         PingMessage::check(&res.message)
     }
+
+    pub fn parse(res: &Response) -> Result<()> {
+        parse_res(res)
+    }
 }

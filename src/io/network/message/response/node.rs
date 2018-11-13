@@ -1,6 +1,7 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 
+use io::Node;
 use io::network::message::message::node::*;
 use io::network::message::response::response::*;
 
@@ -55,4 +56,19 @@ impl NodeResponse {
         NodeMessage::check_get(&res.message)
     }
 
+    pub fn parse_count(res: &Response) -> Result<u64> {
+        parse_res(res)
+    }
+
+    pub fn parse_list(res: &Response) -> Result<Vec<Node>> {
+        parse_res(res)
+    }
+
+    pub fn parse_lookup(res: &Response) -> Result<bool> {
+        parse_res(res)
+    }
+
+    pub fn parse_get(res: &Response) -> Result<Node> {
+        parse_res(res)
+    }
 }

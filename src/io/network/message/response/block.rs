@@ -1,6 +1,7 @@
 use mitrid_core::base::Result;
 use mitrid_core::base::Checkable;
 
+use model::Block;
 use io::network::message::message::block::*;
 use io::network::message::response::response::*;
 
@@ -41,5 +42,17 @@ impl BlockResponse {
         res.check()?;
 
         BlockMessage::check_create(&res.message)
+    }
+
+    pub fn parse_lookup(res: &Response) -> Result<bool> {
+        parse_res(res)
+    }
+
+    pub fn parse_get(res: &Response) -> Result<Block> {
+        parse_res(res)
+    }
+
+    pub fn parse_create(res: &Response) -> Result<()> {
+        parse_res(res)
     }
 }

@@ -18,4 +18,10 @@ impl ErrorResponse {
 
         ErrorMessage::check(&res.message)
     }
+
+    pub fn parse(res: &Response) -> Result<String> {
+        res.check()?;
+
+        parse_res(res)
+    }
 }
