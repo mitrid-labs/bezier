@@ -1,5 +1,7 @@
 use mitrid_core::base::Result;
 
+use crypto::Digest;
+use model::Block;
 use io::network::message::message::block::*;
 use io::network::message::request::request::*;
 
@@ -40,5 +42,17 @@ impl BlockRequest {
         check_req(req)?;
 
         BlockMessage::check_create(&req.message)
+    }
+
+    pub fn parse_lookup(req: &Request) -> Result<Digest> {
+        parse_req(req)
+    }
+
+    pub fn parse_get(req: &Request) -> Result<Digest> {
+        parse_req(req)
+    }
+
+    pub fn parse_create(req: &Request) -> Result<Block> {
+        parse_req(req)
     }
 }

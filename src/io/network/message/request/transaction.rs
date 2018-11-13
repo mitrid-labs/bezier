@@ -1,5 +1,7 @@
 use mitrid_core::base::Result;
 
+use crypto::Digest;
+use model::Transaction;
 use io::network::message::message::transaction::*;
 use io::network::message::request::request::*;
 
@@ -40,5 +42,17 @@ impl TransactionRequest {
         check_req(req)?;
 
         TransactionMessage::check_create(&req.message)
+    }
+
+    pub fn parse_lookup(req: &Request) -> Result<Digest> {
+        parse_req(req)
+    }
+
+    pub fn parse_get(req: &Request) -> Result<Digest> {
+        parse_req(req)
+    }
+
+    pub fn parse_create(req: &Request) -> Result<Transaction> {
+        parse_req(req)
     }
 }

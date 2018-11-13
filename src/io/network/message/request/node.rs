@@ -1,5 +1,6 @@
 use mitrid_core::base::Result;
 
+use io::Address;
 use io::network::message::message::node::*;
 use io::network::message::request::request::*;
 
@@ -54,4 +55,45 @@ impl NodeRequest {
         NodeMessage::check_get(&req.message)
     }
 
+    pub fn parse_count(req: &Request) -> Result<(Option<Address>, Option<Address>)> {
+        let (from, to): (Option<Address>, Option<Address>) = parse_req(req)?;
+
+        if let Some(ref from) = from {
+            if let Some(ref to) = to {
+                if from >= to {
+                    return Err(String::from("invalid range"));
+                } 
+            }
+        }
+
+        Ok((from, to))
+    }
+
+    pub fn parse_list(req: &Request) -> Result<(Option<Address>, Option<Address>, Option<u64>)> {
+        let (from, to, count): (Option<Address>, Option<Address>, Option<u64>) = parse_req(req)?;
+
+        if let Some(ref from) = from {
+            if let Some(ref to) = to {
+                if from >= to {
+                    return Err(String::from("invalid range"));
+                } 
+            }
+        }
+
+        if let Some(count) = count {
+            if count == 0 {
+                return Err(String::from("invalid count"));
+            }
+        }
+
+        Ok((from, to, count))
+    }
+
+    pub fn parse_lookup(req: &Request) -> Result<Address> {
+        parse_req(req)
+    }
+
+    pub fn parse_get(req: &Request) -> Result<Address> {
+        parse_req(req)
+    }
 }

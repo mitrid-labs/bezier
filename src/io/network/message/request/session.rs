@@ -1,4 +1,5 @@
 use mitrid_core::base::Result;
+use mitrid_core::io::Permission;
 
 use io::network::message::message::session::*;
 use io::network::message::request::request::*;
@@ -16,5 +17,9 @@ impl SessionRequest {
         check_req(req)?;
 
         SessionMessage::check(&req.message)
+    }
+
+    pub fn parse(req: &Request) -> Result<Permission> {
+        parse_req(req)
     }
 }

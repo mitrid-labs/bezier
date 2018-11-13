@@ -17,4 +17,8 @@ impl PingRequest {
 
         PingMessage::check(&req.message)
     }
+
+    pub fn parse(req: &Request) -> Result<()> {
+        parse_req(req)
+    }
 }

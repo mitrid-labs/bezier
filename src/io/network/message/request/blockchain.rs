@@ -1,5 +1,6 @@
 use mitrid_core::base::Result;
 
+use crypto::Digest;
 use io::network::message::message::blockchain::*;
 use io::network::message::request::request::*;
 
@@ -16,5 +17,9 @@ impl BlockChainRequest {
         check_req(req)?;
 
         BlockChainMessage::check_get(&req.message)
+    }
+
+    pub fn parse_get(req: &Request) -> Result<Digest> {
+        parse_req(req)
     }
 }
