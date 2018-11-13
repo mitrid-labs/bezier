@@ -1,9 +1,10 @@
 use mitrid_core::base::Result;
+use mitrid_core::io::Resource;
 
 use crypto::Hasher;
 use io::Store;
-use io::{Message, Response};
-use io::{Request, check_req};
+use io::{Message, Request, Response};
+use io::check_req;
 
 pub fn not_implemented(_store: &mut Store,
                        request: &Request)
@@ -15,13 +16,13 @@ pub fn not_implemented(_store: &mut Store,
 
     let payload = "not not_implemented".as_bytes().to_vec();
 
-    let error_message = Message::new()
-                            .meta(&request.message.meta)?
-                            .session(&request.message.session)?
-                            .method(&request.message.method)?
-                            .resource(&request.message.resource)?
-                            .payload(&payload)?
-                            .finalize(&mut hasher)?;
+    let message = Message::new()
+                    .meta(&request.message.meta)?
+                    .session(&request.message.session)?
+                    .method(&request.message.method)?
+                    .resource(&Resource::Error)?
+                    .payload(&payload)?
+                    .finalize(&mut hasher)?;
 
-    Response::new(&error_message)
+    Response::new(&message)
 }

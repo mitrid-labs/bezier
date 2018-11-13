@@ -1,4 +1,6 @@
 use mitrid_core::base::Result;
+use mitrid_core::base::ConstantSize;
+use mitrid_core::base::Checkable;
 
 use crypto::Digest;
 use model::Block;
@@ -45,14 +47,28 @@ impl BlockRequest {
     }
 
     pub fn parse_lookup(req: &Request) -> Result<Digest> {
-        parse_req(req)
+        let digest: Digest = parse_req(req)?;
+
+        digest.check()?;
+        digest.check_size()?;
+
+        Ok(digest)
     }
 
     pub fn parse_get(req: &Request) -> Result<Digest> {
-        parse_req(req)
+        let digest: Digest = parse_req(req)?;
+
+        digest.check()?;
+        digest.check_size()?;
+
+        Ok(digest)
     }
 
     pub fn parse_create(req: &Request) -> Result<Block> {
-        parse_req(req)
+        let block: Block = parse_req(req)?;
+
+        block.check()?;
+
+        Ok(block)
     }
 }

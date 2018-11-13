@@ -1,4 +1,5 @@
 use mitrid_core::base::Result;
+use mitrid_core::base::Checkable;
 use mitrid_core::io::Permission;
 
 use io::network::message::message::session::*;
@@ -20,6 +21,10 @@ impl SessionRequest {
     }
 
     pub fn parse(req: &Request) -> Result<Permission> {
-        parse_req(req)
+        let permission: Permission = parse_req(req)?;
+
+        permission.check()?;
+
+        Ok(permission)
     }
 }

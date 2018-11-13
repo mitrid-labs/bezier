@@ -1,4 +1,6 @@
 use mitrid_core::base::Result;
+use mitrid_core::base::ConstantSize;
+use mitrid_core::base::Checkable;
 
 use crypto::Digest;
 use io::network::message::message::blockchain::*;
@@ -20,6 +22,11 @@ impl BlockChainRequest {
     }
 
     pub fn parse_get(req: &Request) -> Result<Digest> {
-        parse_req(req)
+        let digest: Digest = parse_req(req)?;
+
+        digest.check()?;
+        digest.check_size()?;
+
+        Ok(digest)
     }
 }

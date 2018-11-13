@@ -1,4 +1,6 @@
 use mitrid_core::base::Result;
+use mitrid_core::base::VariableSize;
+use mitrid_core::base::Checkable;
 
 use io::Address;
 use io::network::message::message::node::*;
@@ -58,8 +60,16 @@ impl NodeRequest {
     pub fn parse_count(req: &Request) -> Result<(Option<Address>, Option<Address>)> {
         let (from, to): (Option<Address>, Option<Address>) = parse_req(req)?;
 
+        from.check()?;
+
+        to.check()?;
+
         if let Some(ref from) = from {
+            from.check_size()?;
+            
             if let Some(ref to) = to {
+                to.check_size()?;
+
                 if from >= to {
                     return Err(String::from("invalid range"));
                 } 
@@ -72,8 +82,16 @@ impl NodeRequest {
     pub fn parse_list(req: &Request) -> Result<(Option<Address>, Option<Address>, Option<u64>)> {
         let (from, to, count): (Option<Address>, Option<Address>, Option<u64>) = parse_req(req)?;
 
+        from.check()?;
+
+        to.check()?;
+
         if let Some(ref from) = from {
+            from.check_size()?;
+            
             if let Some(ref to) = to {
+                to.check_size()?;
+
                 if from >= to {
                     return Err(String::from("invalid range"));
                 } 
@@ -90,10 +108,20 @@ impl NodeRequest {
     }
 
     pub fn parse_lookup(req: &Request) -> Result<Address> {
-        parse_req(req)
+        let address: Address = parse_req(req)?;
+
+        address.check()?;
+        address.check_size()?;
+
+        Ok(address)
     }
 
     pub fn parse_get(req: &Request) -> Result<Address> {
-        parse_req(req)
+        let address: Address = parse_req(req)?;
+
+        address.check()?;
+        address.check_size()?;
+
+        Ok(address)
     }
 }

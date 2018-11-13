@@ -1,4 +1,6 @@
 use mitrid_core::base::Result;
+use mitrid_core::base::ConstantSize;
+use mitrid_core::base::Checkable;
 
 use crypto::Digest;
 use model::Transaction;
@@ -45,14 +47,28 @@ impl TransactionRequest {
     }
 
     pub fn parse_lookup(req: &Request) -> Result<Digest> {
-        parse_req(req)
+        let digest: Digest = parse_req(req)?;
+
+        digest.check()?;
+        digest.check_size()?;
+
+        Ok(digest)
     }
 
     pub fn parse_get(req: &Request) -> Result<Digest> {
-        parse_req(req)
+        let digest: Digest = parse_req(req)?;
+
+        digest.check()?;
+        digest.check_size()?;
+
+        Ok(digest)
     }
 
     pub fn parse_create(req: &Request) -> Result<Transaction> {
-        parse_req(req)
+        let transaction: Transaction = parse_req(req)?;
+
+        transaction.check()?;
+
+        Ok(transaction)
     }
 }
