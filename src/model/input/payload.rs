@@ -72,7 +72,7 @@ impl InputPayload {
         self.check()?;
         output.check()?;
 
-        if output.payload.0 != self.public_key {
+        if output.payload.public_key != self.public_key {
             return Ok(false);
         }
 
@@ -83,7 +83,7 @@ impl InputPayload {
         self.check()?;
         output.check()?;
 
-        if output.payload.0 != self.public_key {
+        if output.payload.public_key != self.public_key {
             return Err(format!("invalid public key"));
         }
 
