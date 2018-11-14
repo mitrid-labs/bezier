@@ -10,9 +10,10 @@ use io::Store;
 use io::network::{Message, Request, Response};
 use io::network::message::request::node::*;
 use io::network::message::request::utxo::*;
+use io::network::server::handler::error::*;
 
-pub fn count_handler(store: &mut Store,
-                     request: &Request)
+pub fn count(store: &mut Store,
+             request: &Request)
     -> Result<Response>
 {
     request.check()?;
@@ -24,7 +25,7 @@ pub fn count_handler(store: &mut Store,
         let (from, to) = UTxORequest::parse_count(request)?;
         UTxO::store_count(store, from, to)?;
     } else {
-        return Err(format!("invalid request"));
+        return error(store, request, "invalid resource");
     };
 
     let payload = count.to_bytes()?;

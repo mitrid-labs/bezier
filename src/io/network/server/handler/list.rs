@@ -10,9 +10,10 @@ use io::Store;
 use io::network::{Message, Request, Response};
 use io::network::message::request::node::*;
 use io::network::message::request::utxo::*;
+use io::network::server::handler::error::*;
 
-pub fn list_handler(store: &mut Store,
-                    request: &Request)
+pub fn list(store: &mut Store,
+            request: &Request)
     -> Result<Response>
 {
     request.check()?;
@@ -24,7 +25,7 @@ pub fn list_handler(store: &mut Store,
         let (from, to, count, skip) = UTxORequest::parse_list(request)?;
         UTxO::store_list(store, from, to, count, skip)?;
     } else {
-        return Err(format!("invalid request"));
+        return error(store, request, "invalid resource");
     };
 
     let payload = list.to_bytes()?;

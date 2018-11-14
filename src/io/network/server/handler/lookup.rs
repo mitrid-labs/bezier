@@ -12,9 +12,10 @@ use io::network::message::request::node::*;
 use io::network::message::request::utxo::*;
 use io::network::message::request::transaction::*;
 use io::network::message::request::block::*;
+use io::network::server::handler::error::*;
 
-pub fn lookup_handler(store: &mut Store,
-                     request: &Request)
+pub fn lookup(store: &mut Store,
+              request: &Request)
     -> Result<Response>
 {
     request.check()?;
@@ -32,7 +33,7 @@ pub fn lookup_handler(store: &mut Store,
         let id = BlockRequest::parse_lookup(request)?;
         Block::store_lookup(store, &id)?;
     } else {
-        return Err(format!("invalid request"));
+        return error(store, request, "invalid resource");
     };
 
     let payload = found.to_bytes()?;

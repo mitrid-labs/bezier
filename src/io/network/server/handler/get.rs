@@ -13,9 +13,10 @@ use io::network::message::request::utxo::*;
 use io::network::message::request::transaction::*;
 use io::network::message::request::block::*;
 use io::network::message::request::blockchain::*;
+use io::network::server::handler::error::*;
 
-pub fn get_handler(store: &mut Store,
-                   request: &Request)
+pub fn get(store: &mut Store,
+           request: &Request)
     -> Result<Response>
 {
     request.check()?;
@@ -36,7 +37,7 @@ pub fn get_handler(store: &mut Store,
         let id = BlockChainRequest::parse_get(request)?;
         BlockChain::store_get(store, &id)?.to_bytes()?
     } else {
-        return Err(format!("invalid request"));
+        return error(store, request, "invalid resource");
     };
 
     let mut hasher = Hasher{};

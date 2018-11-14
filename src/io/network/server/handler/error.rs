@@ -6,15 +6,16 @@ use io::Store;
 use io::{Message, Request, Response};
 use io::check_req;
 
-pub fn not_implemented(_store: &mut Store,
-                       request: &Request)
+pub fn error(_store: &mut Store,
+             request: &Request,
+             error: &str)
     -> Result<Response>
 {
     check_req(request)?;
 
     let mut hasher = Hasher{};
 
-    let payload = "not not_implemented".as_bytes().to_vec();
+    let payload = error.as_bytes().to_vec();
 
     let message = Message::new()
                     .meta(&request.message.meta)?

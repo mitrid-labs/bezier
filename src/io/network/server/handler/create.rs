@@ -8,9 +8,10 @@ use io::Store;
 use io::network::{Message, Request, Response};
 use io::network::message::request::transaction::*;
 use io::network::message::request::block::*;
+use io::network::server::handler::error::*;
 
-pub fn create_handler(store: &mut Store,
-                      request: &Request)
+pub fn create(store: &mut Store,
+              request: &Request)
     -> Result<Response>
 {
     request.check()?;
@@ -27,7 +28,7 @@ pub fn create_handler(store: &mut Store,
         //       whatever: make a list
         block.store_create(store)?;
     } else {
-        return Err(format!("invalid request"));
+        return error(store, request, "invalid resource");
     };
 
     let mut hasher = Hasher{};
