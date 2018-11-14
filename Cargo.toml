@@ -17,6 +17,8 @@ serde_cbor = "^0.9"
 hex = "^0.3"
 sodiumoxide = "^0.1"
 rocksdb = "^0.10"
+structopt = "^0.2"
+clap = "^2.32"
 mitrid_core = "^0.9"
 
 [dev-dependencies]

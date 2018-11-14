@@ -3,6 +3,8 @@ extern crate serde;
 extern crate serde_derive;
 extern crate sodiumoxide;
 extern crate rocksdb;
+extern crate structopt;
+extern crate clap;
 extern crate mitrid_core;
 
 pub mod crypto;
