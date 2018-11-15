@@ -16,6 +16,7 @@ impl HandlerBase<Store, (), (), Digest, Vec<u8>> for Handler {
       -> Result<Response>
     {
         ping(store, request)
+          .or_else(|e| error(store, request, &format!("{}", e)))
     }
 
     fn handle_session(&mut self,
@@ -24,6 +25,7 @@ impl HandlerBase<Store, (), (), Digest, Vec<u8>> for Handler {
         -> Result<Response>
     {
         session(store, request)
+          .or_else(|e| error(store, request, &format!("{}", e)))
     }
 
     fn handle_count(&mut self,
@@ -32,6 +34,7 @@ impl HandlerBase<Store, (), (), Digest, Vec<u8>> for Handler {
         -> Result<Response>
     {
         count(store, request)
+          .or_else(|e| error(store, request, &format!("{}", e)))
     }
 
     fn handle_list(&mut self,
@@ -40,6 +43,7 @@ impl HandlerBase<Store, (), (), Digest, Vec<u8>> for Handler {
         -> Result<Response>
     {
         list(store, request)
+          .or_else(|e| error(store, request, &format!("{}", e)))
     }
 
     fn handle_lookup(&mut self,
@@ -48,6 +52,7 @@ impl HandlerBase<Store, (), (), Digest, Vec<u8>> for Handler {
         -> Result<Response>
     {
         lookup(store, request)
+          .or_else(|e| error(store, request, &format!("{}", e)))
     }
 
     fn handle_get(&mut self,
@@ -56,6 +61,7 @@ impl HandlerBase<Store, (), (), Digest, Vec<u8>> for Handler {
         -> Result<Response>
     {
         get(store, request)
+          .or_else(|e| error(store, request, &format!("{}", e)))
     }
 
     fn handle_create(&mut self,
@@ -64,6 +70,7 @@ impl HandlerBase<Store, (), (), Digest, Vec<u8>> for Handler {
         -> Result<Response>
     {
         create(store, request)
+          .or_else(|e| error(store, request, &format!("{}", e)))
     }
 
     fn handle_update(&mut self,
